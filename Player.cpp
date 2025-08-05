@@ -1,0 +1,129 @@
+#include "Player.hpp"
+#include "Game.hpp"
+#include "Variables.hpp"
+#include <algorithm>
+#include <raylib.h>
+#include <raymath.h>
+#include <sol/raii.hpp>
+#include <sol/sol.hpp>
+#include <variant>
+#include <vector>
+
+void Player::setGame(Game *game) {
+    this->game = game;
+}
+
+bool Player::moveAndCollideWithTiles(double delta, Tile *tiles, uint sizeX, uint sizeY) {
+    double dt = delta/MAX_COLLISION_COUNT;
+
+    std::vector<Tile*> tilesToCheck;
+    int posX = (int)(getPos().x);
+    int posY = (int)(getPos().y);
+
+    for (int i = -1; i <= 1; i++) {
+        for (int j = -1; j <= 1; j++) {
+            if ((uint)(posX+j) < sizeX && (uint)(posY+i) < sizeY) {
+                Tile *tile = tiles+(posY+i)*sizeX+(posX+j);
+                if (tile->getHitbox().getDim().x * tile->getHitbox().getDim().y == 0) continue;
+                tilesToCheck.push_back(tile);
+            }
+        }
+    }
+
+    std::vector<Tile*> colliding{};
+    for (int i = 0; i < MAX_COLLISION_COUNT + 1; i++) {
+        for (auto tile : tilesToCheck) {
+            Collider collision = tile->getHitbox();
+            if (collider.isColliding(collision)) {
+                colliding.push_back(tile);
+                if (tile->getType()->isWalkable) {
+                    if (std::find(prevColliding.begin(), prevColliding.end(), tile) == prevColliding.end()) {
+                        Variables::lua["TileScripts"][tile->getType()->id]["onEnter"](tile, this);
+                    }
+                } else {
+                    if (std::find(prevColliding.begin(), prevColliding.end(), tile) == prevColliding.end()) {
+                        Variables::lua["TileScripts"][tile->getType()->id]["onCollision"](tile, this);
+                    }
+                    collider.preventCollisionWithStatic(collision);
+                    float collisionFactor = -Vector2DotProduct(collider.lastCollisionNormal, vel);
+                    collisionFactor = std::max(collisionFactor, 0.f);
+                    vel = Vector2Add(vel, Vector2Scale(collider.lastCollisionNormal, -Vector2DotProduct(collider.lastCollisionNormal, vel)));
+                }
+            }
+        }
+        if (i != MAX_COLLISION_COUNT)
+            setPos(Vector2Add(getPos(), Vector2Scale(vel, dt)));
+
+        prevColliding.clear();
+        for (auto tile : colliding) {
+            if (!collider.isColliding(tile->getHitbox())) {
+                Variables::lua["TileScripts"][tile->getType()->id]["onLeave"](tile, this);
+            } else {
+                prevColliding.push_back(tile);
+                Variables::lua["TileScripts"][tile->getType()->id]["onStanding"](tile, this);
+            }
+        }
+        colliding.clear();
+    }
+    return false;
+}
+
+void Player::applyAcceleration(Vector2 acc, double delta) {
+    vel.x += acc.x * delta;
+    vel.y += acc.y * delta;
+}
+
+void Player::accelerateTowards(Vector2 newVel, double delta, double scale) {
+    vel = Vector2Lerp(vel, newVel, scale*delta);
+}
+
+Vector2 Player::getPos() {
+    return collider.getPos();
+}
+
+void Player::setPos(Vector2 pos) {
+    collider.setPos(pos);
+}
+
+void Player::draw() {
+    Vector2 position = {
+        getPos().x - collider.dim.x/2.f, getPos().y - collider.dim.y/2.f
+    };
+    position = Vector2Scale(position, Variables::PixelsPerMeter);
+    float scale = (float)Variables::PixelsPerMeter*collider.dim.x/texture.width;
+    DrawTextureEx(texture, position, 0, scale, WHITE);
+    //collider.draw(color);
+}
+
+void Player::drawReach() {
+    Vector2 position = {
+    getPos().x, getPos().y
+    };
+    position = Vector2Scale(position, Variables::PixelsPerMeter);
+
+    DrawCircleLinesV(position, reach*Variables::PixelsPerMeter, WHITE);
+}
+
+void Player::putTile(Vector2 pos, std::string id) {
+    putTileWithReach(pos, id, reach);
+}
+
+void Player::putTileWithReach(Vector2 pos, std::string id, float reach) {
+    if(Vector2Distance(pos, getPos()) > reach) return;
+    game->putTile(pos, id);
+}
+
+
+void Player::initLua() {
+    Variables::lua.new_usertype<Player>("Player",
+        "pos", sol::property(&Player::getPos, &Player::setPos),
+        "vel", &Player::vel,
+        "applyAcceleration", &Player::applyAcceleration,
+        "accelerateTowards", &Player::accelerateTowards,
+        "putTile", &Player::putTile,
+        "putTileWithReach", &Player::putTileWithReach,
+        "color", &Player::color,
+        "reach", &Player::reach
+    );
+}
+
