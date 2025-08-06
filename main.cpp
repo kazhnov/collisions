@@ -30,12 +30,13 @@ int main() {
     Tile::initLua();
     TileTypes::initLua();
     Variables::lua.do_file("lua/init.lua");
-    
+    Variables::RenderDistance = 4;
+
     for (auto &entry : std::filesystem::directory_iterator("lua/tiles")) {
         Variables::lua.do_file(entry.path());
     }
 
-    //SetTargetFPS(60);
+    SetTargetFPS(60);
 
     Camera2D camera;
     camera.zoom = 1.f;
@@ -107,7 +108,7 @@ int main() {
                     player.drawReach();
                 }
 
-                player.drawCollisions();
+                //player.drawCollisions();
 
                 //player.selectedTile->draw();
             } EndMode2D();

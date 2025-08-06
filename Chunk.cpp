@@ -79,13 +79,14 @@ Tile *Chunk::getTileptr(Vector2 pos) {
 void Chunk::draw() {
     for (auto &tile : tiles) {
         tile.draw();
-    }
+    }/*
     DrawRectangleLines(
         posX*CHUNKSIZE*Variables::PixelsPerMeter, 
         posY*CHUNKSIZE*Variables::PixelsPerMeter, 
         CHUNKSIZE*Variables::PixelsPerMeter, 
         CHUNKSIZE*Variables::PixelsPerMeter, 
         YELLOW);
+        */
 }
 
 void Chunk::initialize() {

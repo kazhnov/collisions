@@ -1,0 +1,9 @@
+saves/*
+build/*
+build/Chunk.o
+build/Collider.o
+build/Collisions
+build/Game.o
+build/main.o
+build/Player.o
+build/Tile.o

@@ -18,7 +18,7 @@ enum TileScript {
 
 class Variables {
 public:
-    static inline uint PixelsPerMeter = 64;
+    static inline float PixelsPerMeter = 64;
     static inline sol::state lua;
     static std::optional<sol::function> getScript(std::string id, TileScript type) {
             auto script = lua["TileScripts"][id];
@@ -28,7 +28,15 @@ public:
                 return script["onBlock"];
             }
         }
-    static inline int RenderDistance = 1;
+    static inline int RenderDistance = 2;
+    static void initLua() {
+        lua.new_usertype<Variables>("Config",
+            "tileSize", sol::var(std::ref(Variables::PixelsPerMeter)),
+            "renderDistance", sol::var(std::ref(Variables::RenderDistance))
+        );
+
+
+    }
 };
 
 Vector2 Vector2Floor(Vector2 v);

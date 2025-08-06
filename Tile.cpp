@@ -1,4 +1,5 @@
 #include "Tile.hpp"
+#include "Variables.hpp"
 
 void Tile::draw() {
     if (type->texture.width) {
@@ -20,4 +21,5 @@ void Tile::setType(std::string id) {
     type = TileTypes::get(id);
     hitbox.setDim({type->size.x, type->size.y});
     data = Variables::lua.create_table();
+    Variables::lua["TileScripts"][id]["onCreate"](this);
 }
