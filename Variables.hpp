@@ -28,7 +28,7 @@ public:
                 return script["onBlock"];
             }
         }
-    static inline int RenderDistance = 3;
+    static inline int RenderDistance = 1;
 };
 
 Vector2 Vector2Floor(Vector2 v);

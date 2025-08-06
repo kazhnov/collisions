@@ -27,4 +27,6 @@ class Game {
 
         void draw(); 
         static void initLua();
+
+        void save();
 };

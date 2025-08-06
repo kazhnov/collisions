@@ -15,20 +15,22 @@ bool Chunk::load() {
 
     json data = json::parse(save);
     if(data.empty()) return false;
+    std::cout << "Loading chunk " << posX << ":" << posY << std::endl;
 
     int x = 0;
     int y = 0;
     for (auto tiledata : data["tiles"]) {
+        if (y == CHUNKSIZE) std::cerr << "Too many tiles in save " << path << "\n";
         Tile *tile = getRelativeTileptr(x, y);
-        tile->setType(tiledata["id"].get<std::string>());
+        tile->setType(tiledata["id"]);
         tile->setPos(posX*CHUNKSIZE+x, posY*CHUNKSIZE+y);
         x++;
         if (x == CHUNKSIZE) {
             x = 0;
             y++;
         }
-        if (y == CHUNKSIZE) std::cerr << "Too many tiles in save " << path;
     }
+    std::cout << "Chunk loaded" << std::endl;
     return true;
 };
 
@@ -37,6 +39,7 @@ bool Chunk::save() {
     std::string path = SAVEPATH + std::to_string(posX) + ":" + std::to_string(posY);
     std::ofstream save(path);
     if (save.fail()) return false;
+    std::cout << "Saving chunk " << posX << ":" << posY << std::endl;
 
     json chunk;
 
@@ -48,6 +51,8 @@ bool Chunk::save() {
     }
     chunk["tiles"] = tilesdata;
     save << chunk << std::endl;
+
+    std::cout << "Chunk saved" << std::endl;
 
     return true;
 }

@@ -44,7 +44,7 @@ void Game::updateChunks() {
             it->save();
             it = chunks.erase(it);
         }
-        it++;
+        else ++it;
     }
     
     for (auto &chunk: chunks) {
@@ -145,4 +145,8 @@ void Game::initLua() {
     );
 }
 
-
+void Game::save() {
+    for (auto &chunk : chunks) {
+        chunk.save();
+    }
+}

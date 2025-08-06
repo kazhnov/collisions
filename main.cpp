@@ -119,6 +119,7 @@ int main() {
         game.updateChunks();
     }
 
+    game.save();
     CloseWindow();
 
     return 0;
