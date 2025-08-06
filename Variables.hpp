@@ -8,6 +8,9 @@
 #include <raylib.h>
 const int MAX_COLLISION_COUNT = 16;
 const float G = 2000;
+const bool DEBUGINFO = false;
+const uint CHUNKSIZE = 16;
+const std::string SAVEPATH = std::string("saves/demo/");
 
 enum TileScript {
     onBlock
@@ -25,6 +28,7 @@ public:
                 return script["onBlock"];
             }
         }
+    static inline int RenderDistance = 3;
 };
 
 Vector2 Vector2Floor(Vector2 v);

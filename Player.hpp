@@ -5,8 +5,14 @@
 #include "Tile.hpp"
 #include "Collider.hpp"
 
+
 class Game;
 
+struct TileInfo {
+    Tile *tile;
+    Tile tiledata;
+    std::string id;
+};
 struct Player {
     public:
         Collider collider;
@@ -16,7 +22,7 @@ struct Player {
         Texture texture;
         bool isOnFloor;
         float reach = 4.0;
-        std::vector<Tile*> prevColliding {};
+        std::vector<TileInfo> prevColliding {};
         Tile *selectedTile;
         Player(Vector2 pos, Vector2 size, Color color): collider(pos, size), color(color) {
             texture = LoadTexture("textures/player.png");
@@ -36,7 +42,7 @@ struct Player {
 
         void setGame(Game *game);
 
-        bool moveAndCollideWithTiles(double delta, Tile *tiles, uint sizeX, uint sizeY); 
+        bool moveAndCollideWithTiles(double delta); 
 
         bool moveAndCollideWithGame(double delta); 
 
@@ -65,5 +71,7 @@ struct Player {
         void setR(int r) {
             color.r = r;
         }
+
+        void drawCollisions();
 };
 

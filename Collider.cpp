@@ -10,6 +10,14 @@ void Collider::draw(Color color) {
     DrawRectangle(position.x, position.y, dim.x * Variables::PixelsPerMeter, dim.y*Variables::PixelsPerMeter, color);
 }
 
+void Collider::drawOutline(Color color) {
+    Vector2 position = {
+    pos.x - dim.x/2.f, pos.y - dim.y/2.f
+    };
+    position = Vector2Scale(position, Variables::PixelsPerMeter);
+    DrawRectangleLines(position.x, position.y, dim.x * Variables::PixelsPerMeter, dim.y*Variables::PixelsPerMeter, color);
+}
+
 c2AABB Collider::getAABB() {
     return c2AABB{
         .min = {pos.x - dim.x/2.f, pos.y - dim.y/2.f},

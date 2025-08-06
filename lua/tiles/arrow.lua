@@ -1,7 +1,7 @@
 addTileType("arrow", Vector2(1, 1), Color(255,255,255), true) --Создаю новый тип "а"
 
 function TileScripts.arrow.onCreate(block) 
-    block.data.speed = 20
+    block.data.speed = 10
 end
 
 function TileScripts.arrow.onStanding(block, entity) --Функция запускается когда игрок встаёт на тайл

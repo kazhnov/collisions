@@ -19,6 +19,8 @@ public:
 
     void draw(Color color); 
 
+    void drawOutline(Color color);
+
     bool preventCollisionWithStatic(Collider &target); 
 
     bool isColliding(Collider &target); 

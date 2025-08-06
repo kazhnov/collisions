@@ -84,29 +84,15 @@ public:
         data = Variables::lua.create_table();
     }
 
+    ~Tile() {
+        data = {};
+    }
+
     Tile(): Tile("void", {0,0}) {}
 
-    void draw() {
-        if (type->texture.width) {
-            Vector2 position = {
-            getPos().x - hitbox.dim.x/2.f, getPos().y - hitbox.dim.y/2.f
-            };
-            position = Vector2Scale(position, Variables::PixelsPerMeter);
-            float scale = (float)Variables::PixelsPerMeter/type->texture.width;
-            DrawTextureEx(type->texture, position, 0, scale, type->color);
-        }
-        else {
-            //Vector2 size = Vector2Scale(type.size, 0.9*Variables::PixelsPerMeter);
-            //DrawRectangleV(position, size, type.color);
-            hitbox.draw(type->color);
-        }
-    };
+    void draw();
 
-    void setType(std::string id) {
-        type = TileTypes::get(id);
-        hitbox.setDim({type->size.x, type->size.y});
-        data = Variables::lua.create_table();
-    }
+    void setType(std::string id);
 
     Vector2 getPos() {
         return Vector2{(float)x, (float)y};
@@ -115,7 +101,7 @@ public:
     void setPos(int x, int y) {
         this->x = x;
         this->y = y;
-        hitbox.setPos({(float)x, (float)y});
+        hitbox.setPos({(float)x + 0.5f, (float)y + 0.5f});
     }
 
     void setHitbox(Collider n) {

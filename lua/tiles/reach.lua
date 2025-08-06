@@ -1,7 +1,10 @@
 addTileType("reach", Vector2(1, 1), Color(255,255,255), true)
 
 function TileScripts.reach.onCreate(block)
-    block.data.reach = 5
+    block.data.reach = 3
+end
+
+function TileScripts.reach.onDelete(block)
 end
 
 function TileScripts.reach.onEnter(block, entity)

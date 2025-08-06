@@ -1,19 +1,16 @@
+#define CUTE_C2_IMPLEMENTATION
+#include <cute_c2.h>
 #define SOL_ALL_SAFETIES_ON 1
 #include "Tile.hpp"
 #include "rayliblua.hpp"
 #include <iostream>
-#include <lauxlib.h>
 #include <raylib.h>
 #include <raymath.h>
-#include <sstream>
-#define CUTE_C2_IMPLEMENTATION
-#include <cute_c2.h>
 #include "Game.hpp"
 #include "Player.hpp"
 #include "Display.hpp"
 #include "Variables.hpp"
 #include <sol/sol.hpp>
-#include <cassert>
 #include <filesystem>
 
 Vector2 Vector2Floor(Vector2 v) {
@@ -38,7 +35,7 @@ int main() {
         Variables::lua.do_file(entry.path());
     }
 
-    SetTargetFPS(60);
+    //SetTargetFPS(60);
 
     Camera2D camera;
     camera.zoom = 1.f;
@@ -46,7 +43,7 @@ int main() {
     camera.offset = {display.width/2.f - Variables::PixelsPerMeter/2.f, display.height/2.f - Variables::PixelsPerMeter/2.f};
 
     Player player({1, 1}, {0.8f, 0.8f}, GREEN);
-    Game game(player, display, 32, 32);
+    Game game(player, display);
     player.selectedTile = game.getTileptr({});
     player.game = &game;
     game.player = player;
@@ -63,6 +60,8 @@ int main() {
 
         Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), camera);
         mouse = Vector2Scale(mouse, 1.f/Variables::PixelsPerMeter);
+        mouse.x -= 0.5;
+        mouse.y -= 0.5;
         
         Vector2 deltaVel = {};
         if (IsKeyDown(KEY_A)) {
@@ -86,31 +85,16 @@ int main() {
         else {
             player.accelerateTowards({}, delta, 10);
         }
-        if ((uint)(mouse.x + 0.5f) < game.getSizeX() && (uint)(mouse.y + 0.5f) < game.getSizeY()) {
-            Tile *tile = game.getTileptr(mouse);
-            if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON)) {
-                player.putTile(mouse, "error");
-            }
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
-                player.putTile(mouse, "void");
-            }
-            player.selectedTile = tile;
+        if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON)) {
+            player.putTile(mouse, "reach");
         }
-
-        player.moveAndCollideWithTiles(delta, game.getTileptr({}), game.getSizeX(), game.getSizeY());
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+            player.putTile(mouse, "void");
+        }
+        player.moveAndCollideWithTiles(delta);
 
         camera.target = Vector2Scale(player.getPos(), Variables::PixelsPerMeter);
         
-        
-        /*
-        std::cout << player.isOnFloor << "\t" << player.vel.x << " " << 
-            player.vel.y << "\t" << player.getPos().x << " " << player.getPos().y << "\t" <<
-            player.collider.lastCollisionNormal.x << " " << player.collider.lastCollisionNormal.y <<
-            std::endl;
-            */
-        
-
-        //std::cout << mouse.x << "\t" << mouse.y << std::endl;
 
         BeginDrawing(); {
             ClearBackground(BLACK);
@@ -123,6 +107,8 @@ int main() {
                     player.drawReach();
                 }
 
+                player.drawCollisions();
+
                 //player.selectedTile->draw();
             } EndMode2D();
             std::stringstream s;
@@ -130,6 +116,7 @@ int main() {
             DrawText(s.str().c_str(), 32, 32, 32, RAYWHITE);
 
         } EndDrawing();
+        game.updateChunks();
     }
 
     CloseWindow();

@@ -13,20 +13,18 @@ void Player::setGame(Game *game) {
     this->game = game;
 }
 
-bool Player::moveAndCollideWithTiles(double delta, Tile *tiles, uint sizeX, uint sizeY) {
+bool Player::moveAndCollideWithTiles(double delta) {
     double dt = delta/MAX_COLLISION_COUNT;
 
-    std::vector<Tile*> tilesToCheck;
-    int posX = (int)(getPos().x);
-    int posY = (int)(getPos().y);
+    std::vector<Tile*> tilesToCheck{};
+    float posX = collider.pos.x;
+    float posY = collider.pos.y;
 
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
-            if ((uint)(posX+j) < sizeX && (uint)(posY+i) < sizeY) {
-                Tile *tile = tiles+(posY+i)*sizeX+(posX+j);
-                if (tile->getHitbox().getDim().x * tile->getHitbox().getDim().y == 0) continue;
-                tilesToCheck.push_back(tile);
-            }
+            Tile *tile = game->getTileptr({posX+i,posY+j});
+            if (tile->getHitbox().getDim().x * tile->getHitbox().getDim().y == 0) continue;
+            tilesToCheck.push_back(tile);
         }
     }
 
@@ -36,14 +34,7 @@ bool Player::moveAndCollideWithTiles(double delta, Tile *tiles, uint sizeX, uint
             Collider collision = tile->getHitbox();
             if (collider.isColliding(collision)) {
                 colliding.push_back(tile);
-                if (tile->getType()->isWalkable) {
-                    if (std::find(prevColliding.begin(), prevColliding.end(), tile) == prevColliding.end()) {
-                        Variables::lua["TileScripts"][tile->getType()->id]["onEnter"](tile, this);
-                    }
-                } else {
-                    if (std::find(prevColliding.begin(), prevColliding.end(), tile) == prevColliding.end()) {
-                        Variables::lua["TileScripts"][tile->getType()->id]["onCollision"](tile, this);
-                    }
+                if (!tile->getType()->isWalkable) {
                     collider.preventCollisionWithStatic(collision);
                     float collisionFactor = -Vector2DotProduct(collider.lastCollisionNormal, vel);
                     collisionFactor = std::max(collisionFactor, 0.f);
@@ -54,15 +45,28 @@ bool Player::moveAndCollideWithTiles(double delta, Tile *tiles, uint sizeX, uint
         if (i != MAX_COLLISION_COUNT)
             setPos(Vector2Add(getPos(), Vector2Scale(vel, dt)));
 
-        prevColliding.clear();
         for (auto tile : colliding) {
-            if (!collider.isColliding(tile->getHitbox())) {
-                Variables::lua["TileScripts"][tile->getType()->id]["onLeave"](tile, this);
-            } else {
-                prevColliding.push_back(tile);
-                Variables::lua["TileScripts"][tile->getType()->id]["onStanding"](tile, this);
+            if (std::find_if(prevColliding.begin(), prevColliding.end(), [tile](TileInfo &info){
+                return info.tile == tile;
+            }) == prevColliding.end()) {
+                Variables::lua["TileScripts"][tile->getType()->id]["onEnter"](tile, this);
             }
         }
+
+        for (auto tile : prevColliding) {
+            auto found = std::find(colliding.begin(), colliding.end(), tile.tile);
+            if (found == colliding.end() || colliding[found - colliding.begin()]->getType()->id != tile.id) {
+        Variables::lua["TileScripts"][tile.id]["onLeave"](tile.tiledata, this);
+            } else {
+                Variables::lua["TileScripts"][tile.id]["onStanding"](tile.tiledata, this);
+            }
+        }
+
+        prevColliding.clear();
+        for (auto tile : colliding) {
+            prevColliding.push_back({tile, *tile, tile->getType()->id});
+        }
+
         colliding.clear();
     }
     return false;
@@ -87,12 +91,11 @@ void Player::setPos(Vector2 pos) {
 
 void Player::draw() {
     Vector2 position = {
-        getPos().x - collider.dim.x/2.f, getPos().y - collider.dim.y/2.f
+        collider.pos.x - collider.dim.x/2.f, collider.pos.y - collider.dim.y/2.f
     };
     position = Vector2Scale(position, Variables::PixelsPerMeter);
     float scale = (float)Variables::PixelsPerMeter*collider.dim.x/texture.width;
     DrawTextureEx(texture, position, 0, scale, WHITE);
-    //collider.draw(color);
 }
 
 void Player::drawReach() {
@@ -101,7 +104,13 @@ void Player::drawReach() {
     };
     position = Vector2Scale(position, Variables::PixelsPerMeter);
 
-    DrawCircleLinesV(position, reach*Variables::PixelsPerMeter, WHITE);
+    DrawCircleLinesV(position, reach*Variables::PixelsPerMeter, reach > 0 ? WHITE : RED);
+}
+
+void Player::drawCollisions() {
+    for (auto &tile : this->prevColliding) {
+        tile.tiledata.getHitbox().drawOutline(RED);
+    }
 }
 
 void Player::putTile(Vector2 pos, std::string id) {

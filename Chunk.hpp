@@ -1,0 +1,36 @@
+
+#include "Tile.hpp"
+#include "Variables.hpp"
+#include <raylib.h>
+class Chunk {
+    int posX, posY;
+public:
+    Tile tiles[CHUNKSIZE*CHUNKSIZE];
+    Chunk(int x, int y) {
+        posX = x;
+        posY = y;      
+        initialize();  
+        load();
+    }
+
+    Vector2 getPos() {
+        return {(float)posX, (float)posY};
+    }
+
+    void initialize();
+
+    void draw();
+
+    void setPos(Vector2 pos) {
+        posX = std::floor(pos.x);
+        posY = std::floor(pos.y);
+    }
+
+    Tile *getRelativeTileptr(uint x, uint y);
+    Tile *getTileptr(Vector2 pos);
+
+    bool load();
+
+    bool save();
+
+};
