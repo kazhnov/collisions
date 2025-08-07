@@ -1,7 +1,9 @@
 #define CUTE_C2_IMPLEMENTATION
 #include <cute_c2.h>
 #define SOL_ALL_SAFETIES_ON 1
+#include "gui/Pane.hpp"
 #include "Tile.hpp"
+#include "Item.hpp"
 #include "rayliblua.hpp"
 #include <iostream>
 #include <raylib.h>
@@ -29,10 +31,15 @@ int main() {
     Game::initLua();
     Tile::initLua();
     TileTypes::initLua();
+    Item::initLua();
+    ItemTypes::initLua();
     Variables::lua.do_file("lua/init.lua");
     Variables::RenderDistance = 4;
 
     for (auto &entry : std::filesystem::directory_iterator("lua/tiles")) {
+        Variables::lua.do_file(entry.path());
+    }
+    for (auto &entry : std::filesystem::directory_iterator("lua/items")) {
         Variables::lua.do_file(entry.path());
     }
 
@@ -48,49 +55,78 @@ int main() {
     player.selectedTile = game.getTileptr({});
     player.game = &game;
     game.player = player;
+    GUI::Pane inventory(player.inventory, player.selectedSlot, 9);
+    inventory.anchor = {0.5f, 0.5f};
+    inventory.visible = false;
 
     Variables::lua["player"] = &player;
     Variables::lua["game"] = &game;
 
     Color color;
 
+    for (auto &itemtype : ItemTypes::data) {
+        player.inventory.push_back(Item(itemtype.id, 64));
+    }
+
     while (!WindowShouldClose()) {
         double delta = GetFrameTime();
+        display.width = GetScreenWidth();
+        display.height = GetScreenHeight();
+
+        inventory.pos.x = display.width/2.;
+        inventory.pos.y = display.height/2.;
+
+        inventory.size.x = display.width*0.75;
+        inventory.size.y = display.height*0.75;
 
         Variables::lua["update"](delta);
 
-        Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), camera);
+        Vector2 mouseScreen = GetMousePosition();
+        Vector2 mouse = GetScreenToWorld2D(mouseScreen, camera);
         mouse = Vector2Scale(mouse, 1.f/Variables::PixelsPerMeter);
         mouse.x -= 0.5;
         mouse.y -= 0.5;
         
-        Vector2 deltaVel = {};
-        if (IsKeyDown(KEY_A)) {
-            deltaVel.x -= 1;
+        if (IsKeyPressed(KEY_TAB)) {
+            inventory.visible = !inventory.visible;
         }
-        if (IsKeyDown(KEY_D)) {
-            deltaVel.x += 1;
-        }
-        if (IsKeyDown(KEY_W)) {
-            deltaVel.y -= 1;
-        }
-        if (IsKeyDown(KEY_S)) {
-            deltaVel.y += 1;
-        }
-        Variables::PixelsPerMeter += GetMouseWheelMove() * 5;
-        Variables::PixelsPerMeter = Clamp(Variables::PixelsPerMeter, 16, 256);
-        deltaVel = Vector2Normalize(deltaVel);
-        if (deltaVel.x || deltaVel.y) {
-            player.accelerateTowards(Vector2Scale(deltaVel, 10), delta, 2);
-        }
-        else {
+        if (!inventory.visible) {
+            Vector2 deltaVel = {};
+            if (IsKeyDown(KEY_A)) {
+                deltaVel.x -= 1;
+            }
+            if (IsKeyDown(KEY_D)) {
+                deltaVel.x += 1;
+            }
+            if (IsKeyDown(KEY_W)) {
+                deltaVel.y -= 1;
+            }
+            if (IsKeyDown(KEY_S)) {
+                deltaVel.y += 1;
+            }
+            Variables::PixelsPerMeter += GetMouseWheelMove() * 5;
+            Variables::PixelsPerMeter = Clamp(Variables::PixelsPerMeter, 16, 256);
+            deltaVel = Vector2Normalize(deltaVel);
+            if (deltaVel.x || deltaVel.y) {
+                player.accelerateTowards(Vector2Scale(deltaVel, 10), delta, 2);
+            }
+            else {
+                player.accelerateTowards({}, delta, 10);
+            }
+            if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON)) {
+                player.useSelected(mouse);
+            }
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+                player.putTile(mouse, "void");
+            }
+        } else {
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                Item * item = inventory.get(mouseScreen);
+                if (item != nullptr) {
+                    player.selectedSlot = item - player.inventory.data();
+                }
+            }
             player.accelerateTowards({}, delta, 10);
-        }
-        if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON)) {
-            player.putTile(mouse, "reach");
-        }
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
-            player.putTile(mouse, "void");
         }
         player.moveAndCollideWithTiles(delta);
 
@@ -112,12 +148,17 @@ int main() {
 
                 //player.selectedTile->draw();
             } EndMode2D();
+            if (inventory.visible){
+                inventory.draw();
+            }
             std::stringstream s;
             s << GetFPS() << '\n' << mouse.x << "\t" << mouse.y;
             DrawText(s.str().c_str(), 32, 32, 32, RAYWHITE);
 
         } EndDrawing();
         game.updateChunks();
+        player.cooldown -= delta;
+        if (player.cooldown < 0) player.cooldown = 0;
     }
 
     game.save();

@@ -49,14 +49,14 @@ bool Player::moveAndCollideWithTiles(double delta) {
             if (std::find_if(prevColliding.begin(), prevColliding.end(), [tile](TileInfo &info){
                 return info.tile == tile;
             }) == prevColliding.end()) {
-                Variables::lua["TileScripts"][tile->getType()->id]["onEnter"](tile, this);
+                tile->onEnter(this);
             }
         }
 
         for (auto tile : prevColliding) {
             auto found = std::find(colliding.begin(), colliding.end(), tile.tile);
             if (found == colliding.end() || colliding[found - colliding.begin()]->getType()->id != tile.id) {
-        Variables::lua["TileScripts"][tile.id]["onLeave"](tile.tiledata, this);
+                Variables::lua["TileScripts"][tile.id]["onLeave"](tile.tiledata, this);
             } else {
                 Variables::lua["TileScripts"][tile.id]["onStanding"](tile.tiledata, this);
             }
@@ -70,6 +70,13 @@ bool Player::moveAndCollideWithTiles(double delta) {
         colliding.clear();
     }
     return false;
+}
+
+void Player::selectNext() {
+    selectedSlot++;
+    if (selectedSlot == 3) {
+        selectedSlot = 0;
+    }
 }
 
 void Player::applyAcceleration(Vector2 acc, double delta) {
@@ -110,6 +117,13 @@ void Player::drawReach() {
 void Player::drawCollisions() {
     for (auto &tile : this->prevColliding) {
         tile.tiledata.getHitbox().drawOutline(RED);
+    }
+}
+
+void Player::useSelected(Vector2 pos) {
+    if (!cooldown) {
+        inventory.at(selectedSlot).use(this, pos);
+        cooldown = Variables::UseCoolDown;
     }
 }
 

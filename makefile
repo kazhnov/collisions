@@ -1,4 +1,4 @@
-build/main.o: main.cpp
+build/main.o: main.cpp gui/Pane.hpp
 	g++ main.cpp -o build/main.o -c
 
 build/Player.o: Player.cpp
@@ -19,8 +19,11 @@ build/Collider.o: Collider.cpp
 build/Chunk.o: Chunk.cpp
 	g++ Chunk.cpp -o build/Chunk.o -c
 
-build/Collisions: build/main.o build/Player.o build/Game.o build/Display.o build/Collider.o build/Tile.o build/Chunk.o *.hpp
-	g++ build/main.o build/Player.o build/Game.o build/Display.o build/Collider.o build/Tile.o build/Chunk.o -o build/Collisions -lraylib -llua++ -llua
+build/Item.o: Item.cpp
+	g++ Item.cpp -o build/Item.o -c
+
+build/Collisions: build/main.o build/Player.o build/Game.o build/Display.o build/Collider.o build/Tile.o build/Chunk.o build/Item.o *.hpp
+	g++ build/main.o build/Player.o build/Game.o build/Display.o build/Collider.o build/Tile.o build/Chunk.o build/Item.o -o build/Collisions -lraylib -llua++ -llua
 
 all: build/Collisions
 	build/Collisions

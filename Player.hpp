@@ -2,6 +2,7 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <sol/sol.hpp>
+#include "Item.hpp"
 #include "Tile.hpp"
 #include "Collider.hpp"
 
@@ -22,13 +23,18 @@ struct Player {
         Texture texture;
         bool isOnFloor;
         float reach = 4.0;
+        std::vector<Item> inventory{};
+        uint selectedSlot = 0;
         std::vector<TileInfo> prevColliding {};
         Tile *selectedTile;
+        float cooldown;
         Player(Vector2 pos, Vector2 size, Color color): collider(pos, size), color(color) {
             texture = LoadTexture("textures/player.png");
         };
 
         Player() : collider(Vector2Zero(), {1.f, 1.f}), color(WHITE) {}
+
+        void selectNext();
 
         void setColor(Color color) {
             this->color = color;
@@ -41,6 +47,8 @@ struct Player {
         static void initLua();
 
         void setGame(Game *game);
+
+        void useSelected(Vector2 pos);
 
         bool moveAndCollideWithTiles(double delta); 
 

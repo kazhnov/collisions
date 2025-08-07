@@ -1,42 +1,26 @@
 #pragma once
 #include "Collider.hpp"
 #include "Variables.hpp"
-#include <cmath>
 #include <raylib.h>
 #include <raymath.h>
 #include <cute_c2.h>
-#include <sol/forward.hpp>
-#include <sol/property.hpp>
-#include <sol/raii.hpp>
-#include <sol/resolve.hpp>
-#include <sol/variadic_args.hpp>
+#define SOL_ALL_SAFETIES_ON 1
+#include <sol/sol.hpp>
 #include <string>
 #include <vector>
 
-class TileType {
-public:
+struct TileType {
     const Texture2D texture;
     const Vector2 size;
     const Color color;
     const bool isWalkable;
     bool isScriptable = false;
     const std::string id;
-    TileType(std::string id, Vector2 size, Color color, bool isWalkable) 
-    : id(id), size(Vector2Clamp(size, {}, {1.f, 1.f})), color(color), texture(LoadTexture(("textures/" + id + ".png").c_str())),
-    isWalkable(isWalkable)
-    {
-        if (!Variables::lua["TileScripts"].valid()) 
-            Variables::lua["TileScripts"] = Variables::lua.create_table();
-        if (!Variables::lua["TileScripts"][id].valid()) 
-            Variables::lua["TileScripts"][id] = Variables::lua.create_table();
-        std::cout << "Loaded tile \"" << id << "\"\n";
-    }
+    TileType(std::string id, Vector2 size, Color color, bool isWalkable);
 
-    TileType(std::string id, Vector2 size) :
-        TileType(id, size, WHITE, false)
-    {
-    }
+    TileType(std::string id, Vector2 size);
 };
+
 class TileTypes {
 private:    
     static inline std::vector<TileType> data = {};
@@ -68,7 +52,7 @@ public:
         Variables::lua.set_function("addTileType", sol::resolve<void(std::string, Vector2, Color, bool)>(&TileTypes::add));
     }
 };
-
+class Player;
 class Tile {
 private:
     int x;
@@ -77,44 +61,25 @@ private:
     Collider hitbox;
     sol::table data;
 public:
-    Tile(std::string id, Vector2 pos) :
-        type(TileTypes::get(id)), hitbox({(int)(pos.x) + 0.5f, (int)(pos.y) + 0.5f}, type->size),
-        x(std::floor(pos.x)), y(std::floor(pos.y))
-    {
-        data = Variables::lua.create_table();
-    }
+    Tile(std::string id, Vector2 pos);
 
-    ~Tile() {
-        data = {};
-    }
+    ~Tile();
 
-    Tile(): Tile("void", {0,0}) {}
+    Tile();
 
     void draw();
 
     void setType(std::string id);
 
-    Vector2 getPos() {
-        return Vector2{(float)x, (float)y};
-    }
+    Vector2 getPos();
 
-    void setPos(int x, int y) {
-        this->x = x;
-        this->y = y;
-        hitbox.setPos({(float)x + 0.5f, (float)y + 0.5f});
-    }
+    void setPos(int x, int y);
 
-    void setHitbox(Collider n) {
-        hitbox = n;
-    }
+    void setHitbox(Collider n);
 
-    Collider &getHitbox() {
-        return hitbox;
-    }
+    Collider &getHitbox();
 
-    TileType *getType() {
-        return type;
-    }
+    TileType *getType(); 
 
     static void initLua() {
         Variables::lua.new_usertype<Tile>("Tile",
@@ -125,4 +90,7 @@ public:
     );
     }
 
+    void onStanding(Player *player);
+    void onEnter(Player *player);
+    void onLeave(Player *player);
 };

@@ -8,14 +8,13 @@
 
 bool Chunk::load() {
     using nlohmann::json;
-    std::string path = SAVEPATH + std::to_string(posX) + ":" + std::to_string(posY);
+    std::string path = SAVEPATH + "chunks/" + std::to_string(posX) + ":" + std::to_string(posY);
     std::ifstream save(path);
     if (save.fail()) return false;
     if (save.eof()) return false;
 
     json data = json::parse(save);
     if(data.empty()) return false;
-    std::cout << "Loading chunk " << posX << ":" << posY << std::endl;
 
     int x = 0;
     int y = 0;
@@ -30,16 +29,14 @@ bool Chunk::load() {
             y++;
         }
     }
-    std::cout << "Chunk loaded" << std::endl;
     return true;
 };
 
 bool Chunk::save() {
     using nlohmann::json;
-    std::string path = SAVEPATH + std::to_string(posX) + ":" + std::to_string(posY);
+    std::string path = SAVEPATH + "chunks/" + std::to_string(posX) + ":" + std::to_string(posY);
     std::ofstream save(path);
     if (save.fail()) return false;
-    std::cout << "Saving chunk " << posX << ":" << posY << std::endl;
 
     json chunk;
 
@@ -52,7 +49,6 @@ bool Chunk::save() {
     chunk["tiles"] = tilesdata;
     save << chunk << std::endl;
 
-    std::cout << "Chunk saved" << std::endl;
 
     return true;
 }

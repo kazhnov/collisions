@@ -19,6 +19,7 @@ enum TileScript {
 class Variables {
 public:
     static inline float PixelsPerMeter = 64;
+    static inline float UseCoolDown = 0.1;
     static inline sol::state lua;
     static std::optional<sol::function> getScript(std::string id, TileScript type) {
             auto script = lua["TileScripts"][id];
