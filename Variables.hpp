@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <mutex>
 #include <optional>
 #include <sol/forward.hpp>
 #include <sol/object_base.hpp>
@@ -16,11 +17,13 @@ enum TileScript {
     onBlock
 };
 
+class Game;
 class Variables {
 public:
+    static inline Game *game;
     static inline float PixelsPerMeter = 64;
     static inline float UseCoolDown = 0.1;
-    static inline sol::state lua;
+    static inline sol::state lua{};
     static std::optional<sol::function> getScript(std::string id, TileScript type) {
             auto script = lua["TileScripts"][id];
             if (script.valid()) return std::nullopt;
@@ -35,9 +38,8 @@ public:
             "tileSize", sol::var(std::ref(Variables::PixelsPerMeter)),
             "renderDistance", sol::var(std::ref(Variables::RenderDistance))
         );
-
-
     }
+    static inline std::mutex mutex{};
 };
 
 Vector2 Vector2Floor(Vector2 v);

@@ -6,16 +6,13 @@ class Chunk {
     int posX, posY;
 public:
     Tile tiles[CHUNKSIZE*CHUNKSIZE];
-    Chunk(int x, int y) {
-        posX = x;
-        posY = y;      
-        initialize();  
-        load();
-    }
+    Chunk(int x, int y); 
 
     Vector2 getPos() {
         return {(float)posX, (float)posY};
     }
+
+    void generate();
 
     void initialize();
 

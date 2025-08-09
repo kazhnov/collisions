@@ -1,5 +1,6 @@
 #pragma once
 #include <raylib.h>
+#include <sol/table.hpp>
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 #include <string>

@@ -1,5 +1,6 @@
 #include "Tile.hpp"
 #include "Variables.hpp"
+#include <mutex>
 #include <string>
 #include "Player.hpp"
 
@@ -31,8 +32,13 @@ Tile::~Tile() {
     data = {};
 }
 
-Tile::Tile(): Tile("void", {0,0}) {}
+Tile::Tile(): 
+    type(TileTypes::get("void")),
+    hitbox({}, {}),
+    x(0), y(0)
+{
 
+}
 
 void Tile::draw() {
     if (type->texture.width) {
@@ -53,8 +59,17 @@ void Tile::draw() {
 void Tile::setType(std::string id) {
     type = TileTypes::get(id);
     hitbox.setDim({type->size.x, type->size.y});
+    initialize();
+}
+
+void Tile::initialize() {
     data = Variables::lua.create_table();
-    Variables::lua["TileScripts"][id]["onCreate"](this);
+    Variables::lua["TileScripts"][type->id]["onCreate"](this);
+}
+
+void Tile::setTypeNoLua(std::string id) {
+    type = TileTypes::get(id);
+    hitbox.setDim({type->size.x, type->size.y});
 }
 
 Vector2 Tile::getPos() {

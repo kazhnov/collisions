@@ -1,19 +1,23 @@
 #pragma once
+#include <array>
 #include <cstddef>
+#include <optional>
 #include <raylib.h>
 #include <sys/types.h>
 #include <vector>
 #include "../Item.hpp"
 namespace GUI {
+
+    template<int amount>
     struct Pane {
-        std::vector<Item> &items;
+        std::array<std::optional<Item>, amount> &items;
         uint &selected;
         uint columns;
         Vector2 pos, size, anchor;
         bool visible;
         static inline float thickness = 10;
         static inline float itemThickness = 5;
-        Pane(std::vector<Item> &items, uint &selected, uint columns) 
+        Pane(std::array<std::optional<Item>, amount> &items, uint &selected, uint columns) 
         :items(items), columns(columns), selected(selected)
         {
         }
@@ -46,7 +50,7 @@ namespace GUI {
 
         void drawItem(uint i, Vector2 pos, Vector2 size, Vector2 anchor) {
             Color bg = LIGHTGRAY;
-            if(get(GetMousePosition())-items.data()==i) bg = WHITE;
+            if(get(GetMousePosition())==i) bg = WHITE;
             Vector2 position;
             position.x = pos.x - size.x * anchor.x;
             position.y = pos.y - size.y * anchor.y;
@@ -57,10 +61,11 @@ namespace GUI {
             frame.width  -= itemThickness*2;
             frame.height -= itemThickness*2;
             DrawRectangleRec(frame, bg);
-            items.at(i).draw({frame.x, frame.y}, {frame.width, frame.height}, {});
+            if (items.at(i).has_value())
+                items.at(i)->draw({frame.x, frame.y}, {frame.width, frame.height}, {});
         };
 
-        Item* get(Vector2 mouse) {
+        uint get(Vector2 mouse) {
             Vector2 position;
             position.x = pos.x - size.x * anchor.x + thickness;
             position.y = pos.y - size.y * anchor.y + thickness;
@@ -68,15 +73,15 @@ namespace GUI {
                 mouse.x > position.x + size.x - thickness||
                 mouse.y > position.y + size.y - thickness
             ) {
-                return nullptr;
+                return -1;
             }
             float itemsize = (size.x - thickness*2)/columns;
             mouse.x -= position.x;
             mouse.y -= position.y;
             uint x = mouse.x/itemsize;
             uint y = mouse.y/itemsize;
-            if (y*columns + x >= items.size()) return nullptr;
-            return &items.at(y*columns+x);
+            if (y*columns + x >= items.size()) return -1;
+            return y*columns+x;
         }
 
     };

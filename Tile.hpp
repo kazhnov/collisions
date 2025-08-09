@@ -71,6 +71,8 @@ public:
 
     void setType(std::string id);
 
+    void setTypeNoLua(std::string id);
+
     Vector2 getPos();
 
     void setPos(int x, int y);
@@ -80,6 +82,8 @@ public:
     Collider &getHitbox();
 
     TileType *getType(); 
+
+    void initialize();
 
     static void initLua() {
         Variables::lua.new_usertype<Tile>("Tile",

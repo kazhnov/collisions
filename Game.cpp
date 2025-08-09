@@ -2,8 +2,13 @@
 #include "Variables.hpp"
 #include <algorithm>
 #include <cassert>
+#include <chrono>
+#include <functional>
+#include <future>
+#include <mutex>
 #include <raylib.h>
 #include <sol/forward.hpp>
+#include <thread>
 #include <type_traits>
 
 /*
@@ -30,11 +35,20 @@ Tile *Game::getTileptr(Vector2 pos) {
 }
 */
 
+static std::mutex mutex;
+
+Chunk Game::loadChunk(int x, int y) {
+    //std::lock_guard<std::mutex>lock(chunkMutex);
+    //std::lock_guard<std::mutex> guard(Variables::mutex);
+    return Chunk(x, y);
+}
+
 void Game::updateChunks() {
     Chunk* center = getChunkptrFromPos(player.getPos());    
     std::vector<Vector2> chunkPos{};
     Vector2 centerPos = center->getPos();
     //std::cout <<centerPos.x << "\t" << centerPos.y << std::endl;
+
     std::vector<Chunk>::iterator it = chunks.begin();
     while (it !=chunks.end()){
         if (
@@ -50,6 +64,8 @@ void Game::updateChunks() {
     for (auto &chunk: chunks) {
         chunkPos.push_back(chunk.getPos());
     }
+    //std::cout << std::this_thread::get_id() << std::endl;
+    std::vector<std::future<Chunk>> chunkFutures{};
     for (int i = -Variables::RenderDistance; i <= Variables::RenderDistance; i++) {
         for (int j = -Variables::RenderDistance; j <= Variables::RenderDistance; j++) {
             int x = centerPos.x + j;
@@ -58,17 +74,27 @@ void Game::updateChunks() {
                 return pos.x == x && pos.y == y;
             }) == chunkPos.end()) {
                 //std::cout << x << "\t" << y << std::endl;
-                chunks.push_back(Chunk(x, y));
+
+                chunkFutures.push_back(std::async(std::launch::async, loadChunk, x, y));
+
+                //chunks.push_back(Chunk(x, y));
             }
         }
     }
+    for (auto &chunkF : chunkFutures) {
+        chunks.push_back(chunkF.get());
+        (chunks.end()-1)->initialize();
+        //std::cout << "loaded chunk " << chunks.size() << std::endl;
+    }
+    chunkFutures.clear();
+    //std::cout << "update finished" <<std::endl;
 }
-
-void Game::putTile(Vector2 pos, std::string id) {
+        
+bool Game::putTile(Vector2 pos, std::string id) {
     Tile *old = getTileptr(pos);
-    if (old == nullptr) return;
+    if (old == nullptr) return false;
     std::string oldid = old->getType()->id;
-    if (oldid == id) return;
+    if (oldid == id) return false;
     Tile newt = Tile(*old);
     newt.setType(id);
 
@@ -92,11 +118,12 @@ void Game::putTile(Vector2 pos, std::string id) {
         }
     }
     
-    if (!onChange) return;
+    if (!onChange) return false;
 
     Variables::lua["TileScripts"][oldid]["onDelete"](old);
     old->setType(id);
     Variables::lua["TileScripts"][id]["onCreate"](old);
+    return true;
 }
 
 void Game::draw() {

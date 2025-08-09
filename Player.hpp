@@ -1,19 +1,16 @@
 #pragma once
+#include <array>
+#include <optional>
 #include <raylib.h>
 #include <raymath.h>
 #include <sol/sol.hpp>
 #include "Item.hpp"
 #include "Tile.hpp"
 #include "Collider.hpp"
+#include "TileInfo.hpp"
 
 
 class Game;
-
-struct TileInfo {
-    Tile *tile;
-    Tile tiledata;
-    std::string id;
-};
 struct Player {
     public:
         Collider collider;
@@ -23,10 +20,10 @@ struct Player {
         Texture texture;
         bool isOnFloor;
         float reach = 4.0;
-        std::vector<Item> inventory{};
+        //std::vector<Item> inventory{};
+        std::array<std::optional<Item>, 36> inventory{};
         uint selectedSlot = 0;
         std::vector<TileInfo> prevColliding {};
-        Tile *selectedTile;
         float cooldown;
         Player(Vector2 pos, Vector2 size, Color color): collider(pos, size), color(color) {
             texture = LoadTexture("textures/player.png");
@@ -62,15 +59,13 @@ struct Player {
 
         Vector2 getPos(); 
 
-        void putTile(Vector2 pos, std::string id);
+        bool putTile(Vector2 pos, std::string id);
 
-        void putTileWithReach(Vector2 pos, std::string id, float reach);
+        bool putTileWithReach(Vector2 pos, std::string id, float reach);
 
         void setPos(Vector2 pos); 
 
         void draw(); 
-
-        void sayHi();
 
         int getR() {
             return color.r;

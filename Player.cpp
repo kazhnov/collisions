@@ -2,6 +2,7 @@
 #include "Game.hpp"
 #include "Variables.hpp"
 #include <algorithm>
+#include <optional>
 #include <raylib.h>
 #include <raymath.h>
 #include <sol/raii.hpp>
@@ -122,18 +123,23 @@ void Player::drawCollisions() {
 
 void Player::useSelected(Vector2 pos) {
     if (!cooldown) {
-        inventory.at(selectedSlot).use(this, pos);
-        cooldown = Variables::UseCoolDown;
+        if (inventory.at(selectedSlot).has_value()){
+            inventory.at(selectedSlot).value().use(this, pos);
+            cooldown = Variables::UseCoolDown;
+            if (inventory.at(selectedSlot)->count <= 0) {
+                inventory.at(selectedSlot) = std::nullopt;
+            }
+        }
     }
 }
 
-void Player::putTile(Vector2 pos, std::string id) {
-    putTileWithReach(pos, id, reach);
+bool Player::putTile(Vector2 pos, std::string id) {
+    return putTileWithReach(pos, id, reach);
 }
 
-void Player::putTileWithReach(Vector2 pos, std::string id, float reach) {
-    if(Vector2Distance(pos, getPos()) > reach) return;
-    game->putTile(pos, id);
+bool Player::putTileWithReach(Vector2 pos, std::string id, float reach) {
+    if(Vector2Distance(pos, getPos()) > reach) return false;
+    return game->putTile(pos, id);
 }
 
 

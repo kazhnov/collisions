@@ -6,6 +6,18 @@
 #include <string>
 #include <json.hpp>
 
+
+Chunk::Chunk(int x, int y) {
+    //std::cout << "Loading chunk with " << std::this_thread::get_id() << std::endl;
+    posX = x;
+    posY = y;      
+    if(!load()) {
+        generate();
+    };
+    
+    //std::cout << "Loaded chunk with " << std::this_thread::get_id() << std::endl;
+}
+
 bool Chunk::load() {
     using nlohmann::json;
     std::string path = SAVEPATH + "chunks/" + std::to_string(posX) + ":" + std::to_string(posY);
@@ -21,7 +33,7 @@ bool Chunk::load() {
     for (auto tiledata : data["tiles"]) {
         if (y == CHUNKSIZE) std::cerr << "Too many tiles in save " << path << "\n";
         Tile *tile = getRelativeTileptr(x, y);
-        tile->setType(tiledata["id"]);
+        tile->setTypeNoLua(tiledata["id"]);
         tile->setPos(posX*CHUNKSIZE+x, posY*CHUNKSIZE+y);
         x++;
         if (x == CHUNKSIZE) {
@@ -31,6 +43,10 @@ bool Chunk::load() {
     }
     return true;
 };
+
+void Chunk::generate() {
+
+}
 
 bool Chunk::save() {
     using nlohmann::json;
@@ -88,7 +104,9 @@ void Chunk::draw() {
 void Chunk::initialize() {
     for (int y = 0; y < CHUNKSIZE; y++) {
         for (int x = 0; x < CHUNKSIZE; x++) {
-            getRelativeTileptr(x, y)->setPos(posX*CHUNKSIZE+x, posY*CHUNKSIZE+y);
+            Tile *tile = getRelativeTileptr(x, y);
+            tile->setPos(posX*CHUNKSIZE+x, posY*CHUNKSIZE+y);
+            tile->initialize();
         }
     }
 }

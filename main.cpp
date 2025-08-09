@@ -1,3 +1,4 @@
+#include "Entity.hpp"
 #define CUTE_C2_IMPLEMENTATION
 #include <cute_c2.h>
 #define SOL_ALL_SAFETIES_ON 1
@@ -33,6 +34,7 @@ int main() {
     TileTypes::initLua();
     Item::initLua();
     ItemTypes::initLua();
+    EntityTypes::initLua();
     Variables::lua.do_file("lua/init.lua");
     Variables::RenderDistance = 4;
 
@@ -40,6 +42,9 @@ int main() {
         Variables::lua.do_file(entry.path());
     }
     for (auto &entry : std::filesystem::directory_iterator("lua/items")) {
+        Variables::lua.do_file(entry.path());
+    }
+    for (auto &entry : std::filesystem::directory_iterator("lua/entities")) {
         Variables::lua.do_file(entry.path());
     }
 
@@ -52,10 +57,10 @@ int main() {
 
     Player player({1, 1}, {0.8f, 0.8f}, GREEN);
     Game game(player, display);
-    player.selectedTile = game.getTileptr({});
+    Variables::game = &game;
     player.game = &game;
     game.player = player;
-    GUI::Pane inventory(player.inventory, player.selectedSlot, 9);
+    GUI::Pane<36> inventory(player.inventory, player.selectedSlot, 9);
     inventory.anchor = {0.5f, 0.5f};
     inventory.visible = false;
 
@@ -64,9 +69,14 @@ int main() {
 
     Color color;
 
-    for (auto &itemtype : ItemTypes::data) {
-        player.inventory.push_back(Item(itemtype.id, 64));
-    }
+    for (int i = 0; i < std::min((size_t)36, ItemTypes::data.size()); i++)
+        player.inventory.at(i) = Item(ItemTypes::data.at(i).id, 64);
+
+    /*
+    Entity enemy("enemy", {});
+    enemy.setGoal({3, 5});
+    enemy.calculateRoute();
+    */
 
     while (!WindowShouldClose()) {
         double delta = GetFrameTime();
@@ -121,28 +131,30 @@ int main() {
             }
         } else {
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                Item * item = inventory.get(mouseScreen);
-                if (item != nullptr) {
-                    player.selectedSlot = item - player.inventory.data();
-                }
+                auto item = inventory.get(mouseScreen);
+                if (item != -1)
+                    player.selectedSlot = item;
             }
             player.accelerateTowards({}, delta, 10);
         }
         player.moveAndCollideWithTiles(delta);
 
         camera.target = Vector2Scale(player.getPos(), Variables::PixelsPerMeter);
-        
+
+        //enemy.calculateRoute();
 
         BeginDrawing(); {
             ClearBackground(BLACK);
             BeginMode2D(camera); {
                 
-                game.draw();
-                player.draw();
 
                 if(IsMouseButtonDown(MOUSE_RIGHT_BUTTON) || IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
                     player.drawReach();
                 }
+
+                //enemy.drawRoute();
+                game.draw();
+                player.draw();
 
                 //player.drawCollisions();
 
