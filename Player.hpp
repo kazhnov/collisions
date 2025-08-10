@@ -26,7 +26,7 @@ struct Player {
         std::vector<TileInfo> prevColliding {};
         float cooldown;
         Player(Vector2 pos, Vector2 size, Color color): collider(pos, size), color(color) {
-            texture = LoadTexture("textures/player.png");
+            texture = LoadTexture((Variables::TexturePath+"player.png").c_str());
         };
 
         Player() : collider(Vector2Zero(), {1.f, 1.f}), color(WHITE) {}

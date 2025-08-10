@@ -35,16 +35,16 @@ int main() {
     Item::initLua();
     ItemTypes::initLua();
     EntityTypes::initLua();
-    Variables::lua.do_file("lua/init.lua");
+    Variables::lua.do_file("../lua/init.lua");
     Variables::RenderDistance = 4;
 
-    for (auto &entry : std::filesystem::directory_iterator("lua/tiles")) {
+    for (auto &entry : std::filesystem::directory_iterator("../lua/tiles")) {
         Variables::lua.do_file(entry.path());
     }
-    for (auto &entry : std::filesystem::directory_iterator("lua/items")) {
+    for (auto &entry : std::filesystem::directory_iterator("../lua/items")) {
         Variables::lua.do_file(entry.path());
     }
-    for (auto &entry : std::filesystem::directory_iterator("lua/entities")) {
+    for (auto &entry : std::filesystem::directory_iterator("../lua/entities")) {
         Variables::lua.do_file(entry.path());
     }
 

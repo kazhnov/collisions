@@ -17,7 +17,7 @@ EntityType::EntityType(std::string id, Vector2 size, float speed):
 Entity::Entity(std::string id, Vector2 pos):
     type(EntityTypes::get(id)), 
     collider(pos, type->size),
-    texture(LoadTexture(("textures/"+id+".png").c_str()))
+    texture(LoadTexture((Variables::TexturePath+id+".png").c_str()))
 {}
 
 void Entity::setGoal(Vector2I pos) {

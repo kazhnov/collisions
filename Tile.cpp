@@ -5,7 +5,7 @@
 #include "Player.hpp"
 
 TileType::TileType(std::string id, Vector2 size, Color color, bool isWalkable) 
-: id(id), size(Vector2Clamp(size, {}, {1.f, 1.f})), color(color), texture(LoadTexture(("textures/" + id + ".png").c_str())),
+: id(id), size(Vector2Clamp(size, {}, {1.f, 1.f})), color(color), texture(LoadTexture((Variables::TexturePath + id + ".png").c_str())),
 isWalkable(isWalkable)
 {
     if (!Variables::lua["TileScripts"].valid()) 

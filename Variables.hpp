@@ -11,7 +11,7 @@ const int MAX_COLLISION_COUNT = 16;
 const float G = 2000;
 const bool DEBUGINFO = false;
 const uint CHUNKSIZE = 16;
-const std::string SAVEPATH = std::string("saves/demo/");
+const std::string SAVEPATH = std::string("../saves/demo/");
 
 enum TileScript {
     onBlock
@@ -24,6 +24,7 @@ public:
     static inline float PixelsPerMeter = 64;
     static inline float UseCoolDown = 0.1;
     static inline sol::state lua{};
+    static inline std::string TexturePath = "../textures/";
     static std::optional<sol::function> getScript(std::string id, TileScript type) {
             auto script = lua["TileScripts"][id];
             if (script.valid()) return std::nullopt;
