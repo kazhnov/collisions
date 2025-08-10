@@ -57,9 +57,8 @@ void Item::draw(Vector2 screenPos, Vector2 size, Vector2 anchor) {
 void Item::use(Player *player, Vector2 pos) {
     if (type->type == ItemEnum::Block) {
         if (player->putTile(pos, type->id)){
-            Variables::lua["ItemScripts"][type->id]["onUse"](this, player, pos);
-            std::cout << this->count << std::endl;
             this->count--;
         }
     }
+    Variables::lua["ItemScripts"][type->id]["onUse"](this, player, pos);
 }

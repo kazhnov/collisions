@@ -1,2 +1,5 @@
 saves/*
 build/*
+.idea/editor.xml
+.idea/vcs.xml
+.idea/workspace.xml
