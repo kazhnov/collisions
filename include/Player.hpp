@@ -3,12 +3,9 @@
 #include <optional>
 #include <raylib.h>
 #include <raymath.h>
-#include <sol/sol.hpp>
 #include "Item.hpp"
-#include "Tile.hpp"
-#include "Collider.hpp"
 #include "TileInfo.hpp"
-
+#include "Collider.hpp"
 
 class Game;
 struct Player {
@@ -25,21 +22,11 @@ struct Player {
         uint selectedSlot = 0;
         std::vector<TileInfo> prevColliding {};
         float cooldown;
-        Player(Vector2 pos, Vector2 size, Color color): collider(pos, size), color(color) {
-            texture = LoadTexture((Variables::TexturePath+"player.png").c_str());
-        };
+        Player(Vector2 pos, Vector2 size, Color color);
 
-        Player() : collider(Vector2Zero(), {1.f, 1.f}), color(WHITE) {}
+        Player();
 
         void selectNext();
-
-        void setColor(Color color) {
-            this->color = color;
-        }
-
-        Color getColor() {
-            return color;
-        }
 
         static void initLua();
 
@@ -66,14 +53,6 @@ struct Player {
         void setPos(Vector2 pos); 
 
         void draw(); 
-
-        int getR() {
-            return color.r;
-        }
-
-        void setR(int r) {
-            color.r = r;
-        }
 
         void drawCollisions();
 };

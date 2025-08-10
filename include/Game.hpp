@@ -1,27 +1,21 @@
 #pragma once
-#include "Player.hpp"
-#include "Tile.hpp"
-#include <future>
-#include <iostream>
-#include <mutex>
-#include "Display.hpp"
-#include "Variables.hpp"
+#include <vector>
+#include <raylib.h>
+#include <string>
 #include "Chunk.hpp"
 
+class Tile;
+class Display;
+class Player;
+
 class Game {
-    Tile *tiles;
     std::vector<Chunk> chunks{};
     static Chunk loadChunk(int x, int y);
     public:
         Display &display;
         Player &player;
         Texture texturePlayer;
-        Game(Player &player, Display &display) : player(player), display(display) {
-            this->player = player;
-            std::cout << "world created" << std::endl;
-            std::cout << "world initialized" << std::endl;
-            Variables::lua["game"] = this;
-        }
+        Game(Player &player, Display &display);
         Tile *getTileptr(Vector2 pos); 
         Chunk *getChunkptr(int x, int y);
         Chunk *getChunkptrFromPos(Vector2 pos);

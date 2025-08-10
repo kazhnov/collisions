@@ -1,7 +1,7 @@
-
 #include "Tile.hpp"
 #include "Variables.hpp"
 #include <raylib.h>
+
 class Chunk {
     int posX, posY;
 public:

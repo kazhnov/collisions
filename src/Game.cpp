@@ -1,4 +1,5 @@
 #include "Game.hpp"
+#include "Player.hpp"
 #include "Variables.hpp"
 #include <algorithm>
 #include <cassert>
@@ -36,6 +37,13 @@ Tile *Game::getTileptr(Vector2 pos) {
 */
 
 static std::mutex mutex;
+
+Game::Game(Player &player, Display &display) : player(player), display(display) {
+    this->player = player;
+    std::cout << "world created" << std::endl;
+    std::cout << "world initialized" << std::endl;
+    Variables::lua["game"] = this;
+}
 
 Chunk Game::loadChunk(int x, int y) {
     //std::lock_guard<std::mutex>lock(chunkMutex);
@@ -166,7 +174,6 @@ Tile *Game::getTileptr(Vector2 pos) {
 
 void Game::initLua() {
     Variables::lua.new_usertype<Game>("Game",
-        "tiles", &Game::tiles,
         "putTile", &Game::putTile,
         "getTile", &Game::getTileptr
     );

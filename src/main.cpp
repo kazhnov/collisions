@@ -2,7 +2,7 @@
 #define CUTE_C2_IMPLEMENTATION
 #include <cute_c2.h>
 #define SOL_ALL_SAFETIES_ON 1
-#include "gui/Pane.hpp"
+#include "Pane.hpp"
 #include "Tile.hpp"
 #include "Item.hpp"
 #include "rayliblua.hpp"

@@ -1,14 +1,13 @@
 #include "Entity.hpp"
-#include "Collider.hpp"
 #include "Variables.hpp"
 #include <algorithm>
-#include <cassert>
 #include <cmath>
-#include <cstddef>
 #include <ostream>
 #include <raylib.h>
 #include <raymath.h>
 #include <vector>
+#include "Game.hpp"
+#include "TileInfo.hpp"
 
 EntityType::EntityType(std::string id, Vector2 size, float speed):
     id(id), size(size), speed(speed)

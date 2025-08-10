@@ -1,21 +1,22 @@
 #include "Item.hpp"
-#include "Tile.hpp"
 #include "Player.hpp"
 #include "Variables.hpp"
 #include <iostream>
 #include <raylib.h>
-#include <sched.h>
 #include <sstream>
 
 //ItemType
-ItemType::ItemType(std::string id, ItemEnum type)
-    : id(id), texture(LoadTexture((Variables::TexturePath + id + ".png").c_str())), type(type){
+ItemType::ItemType(std::string id, ItemEnum type, uint stack)
+    : id(id), texture(LoadTexture((Variables::TexturePath + id + ".png").c_str())), type(type), stack(stack)
+    {
         if (!Variables::lua["ItemScripts"].valid()) 
             Variables::lua["ItemScripts"] = Variables::lua.create_table();
         if (!Variables::lua["ItemScripts"][id].valid()) 
             Variables::lua["ItemScripts"][id] = Variables::lua.create_table();
         std::cout << "Loaded item \"" << id << "\"" << std::endl;
 }
+
+ItemType::ItemType(std::string id, ItemEnum type) : ItemType(id, type, 64){}
 
 // Item
 Item::Item(std::string id, uint count) {

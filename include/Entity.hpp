@@ -1,6 +1,9 @@
 #pragma once
+#include <string>
+#include <vector>
+#include "Variables.hpp"
 #include "Collider.hpp"
-#include "Game.hpp"
+struct TileInfo;
 
 struct EntityType {
     const std::string id;

@@ -1,8 +1,8 @@
 #pragma once
 #include <raylib.h>
-#include <sol/table.hpp>
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
+#include <sol/table.hpp>
 #include <string>
 #include "Variables.hpp"
 
@@ -16,7 +16,9 @@ public:
     const Texture2D texture;
     const std::string id;
     const ItemEnum type;
+    const uint stack;
 
+    ItemType(std::string id, ItemEnum type, uint stack);
     ItemType(std::string id, ItemEnum type);
 };
 

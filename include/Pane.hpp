@@ -5,7 +5,7 @@
 #include <raylib.h>
 #include <sys/types.h>
 #include <vector>
-#include "../Item.hpp"
+#include "Item.hpp"
 namespace GUI {
 
     template<int amount>

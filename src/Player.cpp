@@ -10,6 +10,11 @@
 #include <variant>
 #include <vector>
 
+Player::Player(Vector2 pos, Vector2 size, Color color): collider(pos, size), color(color) {
+        texture = LoadTexture((Variables::TexturePath+"player.png").c_str());
+};
+
+Player::Player() : collider(Vector2Zero(), {1.f, 1.f}), color(WHITE) {}
 void Player::setGame(Game *game) {
     this->game = game;
 }

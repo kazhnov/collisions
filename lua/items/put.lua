@@ -12,14 +12,12 @@ function ItemScripts.put.onUse(item, player, pos)
     vector.y = vector.y/length
     local position = Vector2(player.pos.x, player.pos.y)
 
-    --print(length)
-    local lengthSoFar = 0 
+    local lengthSoFar = 0
     while lengthSoFar <= length do
         position.x = position.x + vector.x*0.5
         position.y = position.y + vector.y*0.5
         lengthSoFar = lengthSoFar + 0.5
         game:putTile(position, "error")
-        print(length)
     end
 
 end
