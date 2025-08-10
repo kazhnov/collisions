@@ -7,7 +7,7 @@
 
 //ItemType
 ItemType::ItemType(std::string id, ItemEnum type, uint stack)
-    : id(id), texture(LoadTexture((Variables::TexturePath + id + ".png").c_str())), type(type), stack(stack)
+    : type(type), id(id), texture(LoadTexture((Variables::TexturePath + id + ".png").c_str())), stack(stack)
     {
         if (!Variables::lua["ItemScripts"].valid()) 
             Variables::lua["ItemScripts"] = Variables::lua.create_table();

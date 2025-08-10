@@ -36,9 +36,7 @@ struct Player {
 
         bool moveAndCollideWithTiles(double delta); 
 
-        bool moveAndCollideWithGame(double delta); 
-
-        void applyAcceleration(Vector2 acc, double delta); 
+        void applyAcceleration(Vector2 acc, double delta);
 
         void accelerateTowards(Vector2 newVel, double delta, double scale); 
 

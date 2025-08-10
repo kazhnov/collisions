@@ -72,11 +72,9 @@ int main() {
     for (int i = 0; i < std::min((size_t)36, ItemTypes::data.size()); i++)
         player.inventory.at(i) = Item(ItemTypes::data.at(i).id, 64);
 
-    /*
     Entity enemy("enemy", {});
-    enemy.setGoal({3, 5});
+    enemy.setGoal({5, 0});
     enemy.calculateRoute();
-    */
 
     while (!WindowShouldClose()) {
         double delta = GetFrameTime();
@@ -152,9 +150,11 @@ int main() {
                     player.drawReach();
                 }
 
-                //enemy.drawRoute();
+                enemy.draw();
+                enemy.drawRoute();
                 game.draw();
                 player.draw();
+
 
                 //player.drawCollisions();
 
@@ -169,6 +169,9 @@ int main() {
 
         } EndDrawing();
         game.updateChunks();
+        enemy.calculateRoute();
+        enemy.moveToGoal(delta);
+        enemy.moveAndCollide(delta);
         player.cooldown -= delta;
         if (player.cooldown < 0) player.cooldown = 0;
     }

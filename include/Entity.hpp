@@ -45,7 +45,7 @@ struct Vector2I {
 };
 
 struct Node {
-    Vector2I pos;
+    Vector2 pos;
     float to, from;
     Node *parent;
     float sum();
@@ -54,19 +54,22 @@ struct Node {
 class Entity {
     std::vector<Node*> close{};
     EntityType *type;
-    std::vector<Vector2I> route{};
-    Vector2I goal;
+    std::vector<Vector2> route{};
+    Vector2 goal;
 public:
+
+    bool moveAndCollide(double delta);
     Collider collider;
     Vector2 vel{};
     Texture texture;
     std::vector<TileInfo> prevColliding{};
     Entity(std::string id, Vector2 pos);
-    void setGoal(Vector2I pos);
-    Vector2I getGoal();
+    void setGoal(Vector2 pos);
+    Vector2 getGoal();
     Vector2 getPos();
     void setPos(Vector2 pos);
-    void moveToGoal();
+    void moveToGoal(double delta);
     void calculateRoute();
     void drawRoute();
+    void draw();
 };

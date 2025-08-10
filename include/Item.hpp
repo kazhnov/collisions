@@ -13,9 +13,9 @@ enum class ItemEnum {
 
 class ItemType {
 public:
-    const Texture2D texture;
-    const std::string id;
     const ItemEnum type;
+    const std::string id;
+    const Texture2D texture;
     const uint stack;
 
     ItemType(std::string id, ItemEnum type, uint stack);

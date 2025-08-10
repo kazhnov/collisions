@@ -2,15 +2,10 @@
 #include <raylib.h>
 #include <cute_c2.h>
 
-enum Shape {
-    SHAPE_CIRCLE,
-    SHAPE_BOX,
-};
-
 class Collider {
 public:
-    Vector2 dim;
-    Vector2 pos;
+    Vector2 pos{};
+    Vector2 dim{};
     bool collided = false;
     Vector2 lastCollisionNormal;
     Collider(Vector2 pos, Vector2 dimensions): pos(pos), dim(dimensions) {};
