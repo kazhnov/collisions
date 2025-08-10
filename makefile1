@@ -28,5 +28,5 @@ build/Entity.o: Entity.cpp
 build/Collisions: build/main.o build/Player.o build/Game.o build/Display.o build/Collider.o build/Tile.o build/Chunk.o build/Item.o build/Entity.o *.hpp
 	g++ build/main.o build/Player.o build/Game.o build/Display.o build/Collider.o build/Tile.o build/Chunk.o build/Item.o build/Entity.o -o build/Collisions -lraylib -llua++ -llua
 
-all: build/Collisions
+run: build/Collisions
 	build/Collisions
