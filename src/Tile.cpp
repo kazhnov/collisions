@@ -2,6 +2,7 @@
 #include "Variables.hpp"
 #include <mutex>
 #include <string>
+#include <iostream>
 #include "Player.hpp"
 
 TileType::TileType(std::string id, Vector2 size, Color color, bool isWalkable) 
@@ -112,4 +113,12 @@ Tile::Tile(Tile &tile): hitbox(tile.hitbox) {
     this->y = tile.y;
     this->data = tile.data;
 
+}
+
+void Tile::onBreak(Player *player) {
+    Variables::lua["TileScripts"][type->id]["onBreak"](this, player);
+}
+
+void Tile::onCreate(Player *player) {
+    Variables::lua["TileScripts"][type->id]["onCreate"](this, player);
 }

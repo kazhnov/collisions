@@ -4,8 +4,8 @@
 #include <raylib.h>
 #include <raymath.h>
 #include "Item.hpp"
-#include "TileInfo.hpp"
 #include "Collider.hpp"
+struct TileInfo;
 
 class Game;
 struct Player {
@@ -15,12 +15,10 @@ struct Player {
         Vector2 vel{0, 0};
         Color color;
         Texture texture;
-        bool isOnFloor;
         float reach = 4.0;
-        //std::vector<Item> inventory{};
         std::array<std::optional<Item>, 36> inventory{};
         uint selectedSlot = 0;
-        std::vector<TileInfo> prevColliding {};
+        std::vector<TileInfo*> prevColliding {};
         float cooldown;
         Player(Vector2 pos, Vector2 size, Color color);
 

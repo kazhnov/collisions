@@ -1,6 +1,7 @@
 #include "Player.hpp"
 #include "Game.hpp"
 #include "Tile.hpp"
+#include "TileInfo.hpp"
 #include "Variables.hpp"
 #include <algorithm>
 #include <optional>
@@ -53,25 +54,28 @@ bool Player::moveAndCollideWithTiles(double delta) {
             setPos(Vector2Add(getPos(), Vector2Scale(vel, dt)));
 
         for (auto tile : colliding) {
-            if (std::find_if(prevColliding.begin(), prevColliding.end(), [tile](TileInfo &info){
-                return info.tile == tile;
+            if (std::find_if(prevColliding.begin(), prevColliding.end(), [tile](TileInfo *info){
+                return info->tile == tile;
             }) == prevColliding.end()) {
                 tile->onEnter(this);
             }
         }
 
         for (auto &tile : prevColliding) {
-            auto found = std::find(colliding.begin(), colliding.end(), tile.tile);
-            if (found == colliding.end() || colliding[found - colliding.begin()]->getType()->id != tile.id) {
-                Variables::lua["TileScripts"][tile.id]["onLeave"](tile.old, this);
+            auto found = std::find(colliding.begin(), colliding.end(), tile->tile);
+            if (found == colliding.end() || colliding[found - colliding.begin()]->getType()->id != tile->id) {
+                tile->old.onLeave(this);
             } else {
-                Variables::lua["TileScripts"][tile.id]["onStanding"](tile.old, this);
+                tile->tile->onStanding(this);
             }
         }
 
+        for (auto info : prevColliding) {
+            delete info;
+        }
         prevColliding.clear();
         for (auto &tile: colliding) {
-            TileInfo info = TileInfo(tile);
+            TileInfo *info = new TileInfo(tile);
             prevColliding.push_back(info);
         }
 
@@ -125,7 +129,7 @@ void Player::drawReach() {
 
 void Player::drawCollisions() {
     for (auto &tile : this->prevColliding) {
-        tile.tile->getHitbox().drawOutline(RED);
+        tile->tile->getHitbox().drawOutline(RED);
     }
 }
 

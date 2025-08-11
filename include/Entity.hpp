@@ -3,6 +3,7 @@
 #include <vector>
 #include "Variables.hpp"
 #include "Collider.hpp"
+
 struct TileInfo;
 
 struct EntityType {
@@ -36,14 +37,6 @@ struct EntityTypes {
     }
 };
 
-struct Vector2I {
-    int x;
-    int y;
-    Vector2I(Vector2 v);
-    Vector2I() {x = 0; y = 0;};
-    Vector2I(int x, int y) {this->x = x; this->y = y;}
-};
-
 struct Node {
     Vector2 pos;
     float to, from;
@@ -64,7 +57,7 @@ public:
     Collider collider;
     Vector2 vel{};
     Texture texture;
-    std::vector<TileInfo> prevColliding{};
+    std::vector<TileInfo*> prevColliding{};
     Entity(std::string id, Vector2 pos);
     void setGoal(Vector2 pos);
     Vector2 getGoal();
@@ -74,4 +67,5 @@ public:
     void calculateRoute();
     void drawRoute();
     void draw();
+    static void initLua();
 };

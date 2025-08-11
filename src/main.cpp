@@ -35,6 +35,7 @@ int main() {
     Item::initLua();
     ItemTypes::initLua();
     EntityTypes::initLua();
+    Entity::initLua();
     Variables::lua.do_file("../lua/init.lua");
     Variables::RenderDistance = 4;
 
@@ -48,7 +49,7 @@ int main() {
         Variables::lua.do_file(entry.path());
     }
 
-    //SetTargetFPS(60);
+    SetTargetFPS(60);
 
     Camera2D camera;
     camera.zoom = 1.f;
@@ -76,6 +77,8 @@ int main() {
     enemy.setGoal({5, 0});
     enemy.calculateRoute();
 
+    Variables::lua["enemy"] = &enemy;
+
     while (!WindowShouldClose()) {
         double delta = GetFrameTime();
         display.width = GetScreenWidth();
@@ -92,9 +95,7 @@ int main() {
         Vector2 mouseScreen = GetMousePosition();
         Vector2 mouse = GetScreenToWorld2D(mouseScreen, camera);
         mouse = Vector2Scale(mouse, 1.f/Variables::PixelsPerMeter);
-        mouse.x -= 0.5;
-        mouse.y -= 0.5;
-        
+
         if (IsKeyPressed(KEY_TAB)) {
             inventory.visible = !inventory.visible;
         }
@@ -138,8 +139,6 @@ int main() {
         player.moveAndCollideWithTiles(delta);
 
         camera.target = Vector2Scale(player.getPos(), Variables::PixelsPerMeter);
-
-        //enemy.calculateRoute();
 
         BeginDrawing(); {
             ClearBackground(BLACK);

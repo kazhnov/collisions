@@ -99,4 +99,6 @@ public:
     void onStanding(Player *player);
     void onEnter(Player *player);
     void onLeave(Player *player);
+    void onBreak(Player *player);
+    void onCreate(Player *player);
 };

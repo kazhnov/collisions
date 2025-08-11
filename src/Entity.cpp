@@ -21,7 +21,7 @@ Entity::Entity(std::string id, Vector2 pos):
 {}
 
 void Entity::setGoal(Vector2 pos) {
-    goal = pos;
+    goal = {floor(pos.x)+0.5f, floor(pos.y)+0.5f};
 }
 
 Vector2 Entity::getGoal() {
@@ -29,8 +29,13 @@ Vector2 Entity::getGoal() {
 }
 
 void Entity::moveToGoal(double delta) {
-    if (route.empty()) return;
-    vel = Vector2Normalize(Vector2Subtract(*route.begin(), getPos()));
+    if (route.empty()) {
+        vel = {};
+        return;
+    }
+    vel = Vector2Subtract(*route.begin(), getPos());
+    if (Vector2Length(vel) <= 0.1) return;
+    vel = Vector2Normalize(vel);
     vel = Vector2Scale(vel, type->speed);
 }
 
@@ -42,7 +47,7 @@ void Entity::setPos(Vector2 pos) {
     collider.pos = pos;
 }
 
-float getDistance(Vector2I pos, Vector2I goal) {
+float getDistance(Vector2 pos, Vector2 goal) {
     //return Vector2Distance(pos, goal);
     return std::abs(pos.x - goal.x) + std::abs(pos.y - goal.y);
 }
@@ -55,14 +60,10 @@ Node::Node(Vector2 pos, float to, float from, Node* parent) : pos(pos), to(to), 
 }
 Node::Node(): Node({}, 0, 0, nullptr){};
 
-Vector2I::Vector2I(Vector2 vec) {
-    this->x = std::floor(vec.x);
-    this->y = std::floor(vec.y);
-}
 
 Vector2 getNeighbour(Vector2 pos, uint dir) {
-    pos.x = std::floor(pos.x) + 0.5;
-    pos.y = std::floor(pos.y) + 0.5;
+    pos.x = std::floor(pos.x) + 0.5f;
+    pos.y = std::floor(pos.y) + 0.5f;
     switch (dir) {
         case 0:
             pos.x += 1;
@@ -136,24 +137,28 @@ bool Entity::moveAndCollide(double delta) {
             setPos(Vector2Add(getPos(), Vector2Scale(vel, dt)));
 
         for (auto tile : colliding) {
-            if (std::find_if(prevColliding.begin(), prevColliding.end(), [tile](TileInfo &info){
-                return info.tile == tile;
+            if (std::find_if(prevColliding.begin(), prevColliding.end(), [tile](TileInfo *info){
+                return info->tile == tile;
             }) == prevColliding.end()) {
             }
         }
 
         for (auto &tile : prevColliding) {
-            auto found = std::find(colliding.begin(), colliding.end(), tile.tile);
-            if (found == colliding.end() || colliding[found - colliding.begin()]->getType()->id != tile.id) {
+            auto found = std::find(colliding.begin(), colliding.end(), tile->tile);
+            if (found == colliding.end() || colliding[found - colliding.begin()]->getType()->id != tile->id) {
                 //Variables::lua["TileScripts"][tile.id]["onLeave"](tile.tiledata, this);
             } else {
                 //Variables::lua["TileScripts"][tile.id]["onStanding"](tile.tiledata, this);
             }
         }
 
+        for (auto info : prevColliding) {
+            delete info;
+        }
         prevColliding.clear();
         for (auto tile : colliding) {
-            prevColliding.push_back(TileInfo(tile));
+            TileInfo *info = new TileInfo(tile);
+            prevColliding.push_back(info);
         }
 
         colliding.clear();
@@ -163,10 +168,16 @@ bool Entity::moveAndCollide(double delta) {
 
 void Entity::calculateRoute() {
     float maxDistance = 16;
+    float minDistance = 0.5;
     if (!Variables::game->getTileptr(getGoal())->getType()->isWalkable ||
-        !Variables::game->getTileptr(getPos())->getType()->isWalkable ||
-            getDistance(getPos(), goal) < 0.1
-        ) return;
+        !Variables::game->getTileptr(getPos())->getType()->isWalkable) return;
+    if (getDistance(getPos(), goal) <= minDistance) {
+        route.clear();
+        route.push_back(goal);
+        return;
+    }
+
+
     for (auto closeN : close) {
         delete closeN;
     }
@@ -190,7 +201,7 @@ void Entity::calculateRoute() {
             continue;
         }
 
-        if (getDistance(node->pos, goal) <= 0.51) {
+        if (getDistance(node->pos, goal) <= minDistance) {
             goalNode = node;
             continue;
         } else if (node->sum() > maxDistance || !Variables::game->getTileptr(node->pos)->getType()->isWalkable) {
@@ -205,7 +216,7 @@ void Entity::calculateRoute() {
             Node *neighbour = new Node{};
             neighbour->pos = getNeighbour(node->pos, i);
             neighbour->parent = node;
-            neighbour->to = getDistance(neighbour->pos, node->pos);
+            neighbour->to = getDistance(neighbour->pos, node->pos) + node->to;
             neighbour->from = getDistance(neighbour->pos, goal);
             
 
@@ -227,9 +238,9 @@ void Entity::calculateRoute() {
     }
     if (goalNode == nullptr) return;
     route.clear();
+    route.push_back(goal);
 
-
-    while(goalNode != origin) {
+    while (goalNode != origin) {
         route.push_back(goalNode->pos);
         goalNode = goalNode->parent;
     }
@@ -260,9 +271,17 @@ void Entity::drawRoute() {
     Vector2 firstPos = Vector2Scale(getPos(), Variables::PixelsPerMeter);
     Vector2 secondPos;
     for (auto &pos : route) {
-        secondPos = Vector2Scale(Vector2Add({(float)pos.x, (float)pos.y}, {0.5, 0.5}), Variables::PixelsPerMeter);
+        secondPos = Vector2Scale(pos, Variables::PixelsPerMeter);
         DrawLineV(firstPos, secondPos, WHITE);
         firstPos = secondPos;
     }
+
+}
+
+void Entity::initLua() {
+    Variables::lua.new_usertype<Entity>(
+            "Entity",
+            "goal", sol::property(&Entity::getGoal, &Entity::setGoal)
+            );
 
 }

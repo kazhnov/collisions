@@ -143,8 +143,6 @@ void Game::draw() {
 }
 
 Chunk *Game::getChunkptrFromPos(Vector2 pos) {
-    pos.x += 0.5f;
-    pos.y += 0.5f;
     int x = std::floor(pos.x);
     int y = std::floor(pos.y);
     x = std::floor(x / (float)CHUNKSIZE);
