@@ -59,11 +59,13 @@ private:
     int y;
     TileType *type;
     Collider hitbox;
-    sol::table data;
 public:
+    sol::table data;
     Tile(std::string id, Vector2 pos);
 
     ~Tile();
+
+    Tile(Tile &tile);
 
     Tile();
 

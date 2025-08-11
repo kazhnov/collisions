@@ -3,6 +3,7 @@
 #include <raymath.h>
     
 void Collider::draw(Color color) {
+    if (dim.x * dim.y == 0) return;
     Vector2 position = {
     pos.x - dim.x/2.f, pos.y - dim.y/2.f
     };

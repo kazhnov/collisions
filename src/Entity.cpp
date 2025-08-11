@@ -1,5 +1,6 @@
 #include "Entity.hpp"
 #include "Variables.hpp"
+#include "Tile.hpp"
 #include <algorithm>
 #include <cmath>
 #include <ostream>
@@ -41,7 +42,7 @@ void Entity::setPos(Vector2 pos) {
     collider.pos = pos;
 }
 
-float getDistance(Vector2 pos, Vector2 goal) {
+float getDistance(Vector2I pos, Vector2I goal) {
     //return Vector2Distance(pos, goal);
     return std::abs(pos.x - goal.x) + std::abs(pos.y - goal.y);
 }
@@ -49,6 +50,10 @@ float getDistance(Vector2 pos, Vector2 goal) {
 float Node::sum() {
     return to + from;
 }
+
+Node::Node(Vector2 pos, float to, float from, Node* parent) : pos(pos), to(to), from(from), parent(parent) {
+}
+Node::Node(): Node({}, 0, 0, nullptr){};
 
 Vector2I::Vector2I(Vector2 vec) {
     this->x = std::floor(vec.x);
@@ -137,7 +142,7 @@ bool Entity::moveAndCollide(double delta) {
             }
         }
 
-        for (auto tile : prevColliding) {
+        for (auto &tile : prevColliding) {
             auto found = std::find(colliding.begin(), colliding.end(), tile.tile);
             if (found == colliding.end() || colliding[found - colliding.begin()]->getType()->id != tile.id) {
                 //Variables::lua["TileScripts"][tile.id]["onLeave"](tile.tiledata, this);
@@ -148,7 +153,7 @@ bool Entity::moveAndCollide(double delta) {
 
         prevColliding.clear();
         for (auto tile : colliding) {
-            prevColliding.push_back({tile, *tile, tile->getType()->id});
+            prevColliding.push_back(TileInfo(tile));
         }
 
         colliding.clear();
@@ -159,14 +164,19 @@ bool Entity::moveAndCollide(double delta) {
 void Entity::calculateRoute() {
     float maxDistance = 16;
     if (!Variables::game->getTileptr(getGoal())->getType()->isWalkable ||
-        !Variables::game->getTileptr(getPos())->getType()->isWalkable) return;
+        !Variables::game->getTileptr(getPos())->getType()->isWalkable ||
+            getDistance(getPos(), goal) < 0.1
+        ) return;
+    for (auto closeN : close) {
+        delete closeN;
+    }
     close.clear();
     route.clear();
 
     //std::vector<Node*> close{};
     std::vector<Node*> open{};
     //std::cout << getDistance(getPos(), goal) << std::endl;
-    open.push_back(new Node{getPos(), 0, getDistance(getPos(), goal), nullptr});
+    open.push_back(new Node(getPos(), 0, getDistance(getPos(), goal), nullptr));
     
     Node *origin = open.back();
     Node *goalNode = nullptr;
@@ -176,6 +186,7 @@ void Entity::calculateRoute() {
         Node *node = open.back();
         open.pop_back();
         if(getSame(close, node->pos)!=close.end()) {
+            delete node;
             continue;
         }
 
@@ -191,7 +202,7 @@ void Entity::calculateRoute() {
             if(getSame(close, getNeighbour(node->pos, i)) != close.end()) {
                 continue;
             }
-            Node *neighbour = new Node;
+            Node *neighbour = new Node{};
             neighbour->pos = getNeighbour(node->pos, i);
             neighbour->parent = node;
             neighbour->to = getDistance(neighbour->pos, node->pos);
@@ -226,6 +237,8 @@ void Entity::calculateRoute() {
     for (auto node : open) {
         delete node;
     }
+
+    delete goalNode;
 
     std::reverse(route.begin(), route.end());
 

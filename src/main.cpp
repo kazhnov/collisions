@@ -48,7 +48,7 @@ int main() {
         Variables::lua.do_file(entry.path());
     }
 
-    SetTargetFPS(60);
+    //SetTargetFPS(60);
 
     Camera2D camera;
     camera.zoom = 1.f;

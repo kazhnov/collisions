@@ -1,5 +1,6 @@
 #include "Player.hpp"
 #include "Game.hpp"
+#include "Tile.hpp"
 #include "Variables.hpp"
 #include <algorithm>
 #include <optional>
@@ -44,7 +45,7 @@ bool Player::moveAndCollideWithTiles(double delta) {
                     collider.preventCollisionWithStatic(collision);
                     float collisionFactor = -Vector2DotProduct(collider.lastCollisionNormal, vel);
                     collisionFactor = std::max(collisionFactor, 0.f);
-                    vel = Vector2Add(vel, Vector2Scale(collider.lastCollisionNormal, -Vector2DotProduct(collider.lastCollisionNormal, vel)));
+                    vel = Vector2Add(vel, Vector2Scale(collider.lastCollisionNormal, collisionFactor));
                 }
             }
         }
@@ -59,19 +60,21 @@ bool Player::moveAndCollideWithTiles(double delta) {
             }
         }
 
-        for (auto tile : prevColliding) {
+        for (auto &tile : prevColliding) {
             auto found = std::find(colliding.begin(), colliding.end(), tile.tile);
             if (found == colliding.end() || colliding[found - colliding.begin()]->getType()->id != tile.id) {
-                Variables::lua["TileScripts"][tile.id]["onLeave"](tile.tiledata, this);
+                Variables::lua["TileScripts"][tile.id]["onLeave"](tile.old, this);
             } else {
-                Variables::lua["TileScripts"][tile.id]["onStanding"](tile.tiledata, this);
+                Variables::lua["TileScripts"][tile.id]["onStanding"](tile.old, this);
             }
         }
 
         prevColliding.clear();
-        for (auto tile : colliding) {
-            prevColliding.push_back({tile, *tile, tile->getType()->id});
+        for (auto &tile: colliding) {
+            TileInfo info = TileInfo(tile);
+            prevColliding.push_back(info);
         }
+
 
         colliding.clear();
     }
@@ -122,7 +125,7 @@ void Player::drawReach() {
 
 void Player::drawCollisions() {
     for (auto &tile : this->prevColliding) {
-        tile.tiledata.getHitbox().drawOutline(RED);
+        tile.tile->getHitbox().drawOutline(RED);
     }
 }
 

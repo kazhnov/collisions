@@ -48,6 +48,8 @@ struct Node {
     Vector2 pos;
     float to, from;
     Node *parent;
+    Node(Vector2 pos, float to, float from, Node *parent);
+    Node();
     float sum();
 };
 

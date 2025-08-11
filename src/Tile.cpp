@@ -105,3 +105,11 @@ void Tile::onEnter(Player *player) {
 void Tile::onLeave(Player *player){
     Variables::lua["TileScripts"][type->id]["onLeave"](this, player);
 }
+
+Tile::Tile(Tile &tile): hitbox(tile.hitbox) {
+    this->type = tile.type;
+    this->x = tile.x;
+    this->y = tile.y;
+    this->data = tile.data;
+
+}
