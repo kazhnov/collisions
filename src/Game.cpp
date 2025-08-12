@@ -130,9 +130,9 @@ bool Game::putTile(Vector2 pos, std::string id) {
     
     if (!onChange) return false;
 
-    Variables::lua["TileScripts"][oldid]["onDelete"](old);
+    old->onBreak();
     old->setType(id);
-    Variables::lua["TileScripts"][id]["onCreate"](old);
+    old->onCreate();
     return true;
 }
 

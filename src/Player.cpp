@@ -17,80 +17,6 @@ Player::Player(Vector2 pos, Vector2 size, Color color): collider(pos, size), col
 };
 
 Player::Player() : collider(Vector2Zero(), {1.f, 1.f}), color(WHITE) {}
-void Player::setGame(Game *game) {
-    this->game = game;
-}
-
-bool Player::moveAndCollideWithTiles(double delta) {
-    double dt = delta/MAX_COLLISION_COUNT;
-
-    std::vector<Tile*> tilesToCheck{};
-    float posX = collider.pos.x;
-    float posY = collider.pos.y;
-
-    for (int i = -1; i <= 1; i++) {
-        for (int j = -1; j <= 1; j++) {
-            Tile *tile = game->getTileptr({posX+i,posY+j});
-            if (tile->getHitbox().getDim().x * tile->getHitbox().getDim().y == 0) continue;
-            tilesToCheck.push_back(tile);
-        }
-    }
-
-    std::vector<Tile*> colliding{};
-    for (int i = 0; i < MAX_COLLISION_COUNT + 1; i++) {
-        for (auto tile : tilesToCheck) {
-            Collider collision = tile->getHitbox();
-            if (collider.isColliding(collision)) {
-                colliding.push_back(tile);
-                if (!tile->getType()->isWalkable) {
-                    collider.preventCollisionWithStatic(collision);
-                    float collisionFactor = -Vector2DotProduct(collider.lastCollisionNormal, vel);
-                    collisionFactor = std::max(collisionFactor, 0.f);
-                    vel = Vector2Add(vel, Vector2Scale(collider.lastCollisionNormal, collisionFactor));
-                }
-            }
-        }
-        if (i != MAX_COLLISION_COUNT)
-            setPos(Vector2Add(getPos(), Vector2Scale(vel, dt)));
-
-        for (auto tile : colliding) {
-            if (std::find_if(prevColliding.begin(), prevColliding.end(), [tile](TileInfo *info){
-                return info->tile == tile;
-            }) == prevColliding.end()) {
-                tile->onEnter(this);
-            }
-        }
-
-        for (auto &tile : prevColliding) {
-            auto found = std::find(colliding.begin(), colliding.end(), tile->tile);
-            if (found == colliding.end() || colliding[found - colliding.begin()]->getType()->id != tile->id) {
-                tile->old.onLeave(this);
-            } else {
-                tile->tile->onStanding(this);
-            }
-        }
-
-        for (auto info : prevColliding) {
-            delete info;
-        }
-        prevColliding.clear();
-        for (auto &tile: colliding) {
-            TileInfo *info = new TileInfo(tile);
-            prevColliding.push_back(info);
-        }
-
-
-        colliding.clear();
-    }
-    return false;
-}
-
-void Player::selectNext() {
-    selectedSlot++;
-    if (selectedSlot == 3) {
-        selectedSlot = 0;
-    }
-}
 
 void Player::applyAcceleration(Vector2 acc, double delta) {
     vel.x += acc.x * delta;
@@ -107,6 +33,14 @@ Vector2 Player::getPos() {
 
 void Player::setPos(Vector2 pos) {
     collider.setPos(pos);
+}
+
+void Player::setVel(Vector2 vel) {
+    this->vel = vel;
+}
+
+Vector2 Player::getVel() {
+    return vel;
 }
 
 void Player::draw() {
@@ -157,14 +91,21 @@ bool Player::putTileWithReach(Vector2 pos, std::string id, float reach) {
 
 void Player::initLua() {
     Variables::lua.new_usertype<Player>("Player",
+        "reach", &Player::reach,
         "pos", sol::property(&Player::getPos, &Player::setPos),
-        "vel", &Player::vel,
+        "vel", sol::property(&Player::getVel, &Player::setVel),
         "applyAcceleration", &Player::applyAcceleration,
         "accelerateTowards", &Player::accelerateTowards,
         "putTile", &Player::putTile,
-        "putTileWithReach", &Player::putTileWithReach,
-        "color", &Player::color,
-        "reach", &Player::reach
+        "putTileWithReach", &Player::putTileWithReach
     );
+}
+
+Collider *Player::getCollider() {
+    return &collider;
+}
+
+void Player::setCollider(Collider collider) {
+    this->collider = collider;
 }
 

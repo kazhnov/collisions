@@ -8,5 +8,6 @@ function TileScripts.arrow.onStanding(block, entity) --Функция запус
     local pos = block.pos
     pos.x = pos.x + 1
     game:putTile(pos, "arrow") --Создаю правее от этого тайла ещё один такой же
-    entity.vel.x = block.data.speed
+    entity.vel = Vector2(block.data.speed, entity.vel.y)
+    print(entity.vel)
 end

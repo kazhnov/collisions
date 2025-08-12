@@ -4,6 +4,8 @@
 #include <string>
 #include <iostream>
 #include "Player.hpp"
+#include "Entity.hpp"
+#include "NPC.hpp"
 
 TileType::TileType(std::string id, Vector2 size, Color color, bool isWalkable) 
 : id(id), size(Vector2Clamp(size, {}, {1.f, 1.f})), color(color), texture(LoadTexture((Variables::TexturePath + id + ".png").c_str())),
@@ -65,7 +67,7 @@ void Tile::setType(std::string id) {
 
 void Tile::initialize() {
     data = Variables::lua.create_table();
-    Variables::lua["TileScripts"][type->id]["onCreate"](this);
+    Variables::lua["TileScripts"][type->id]["onCreateNPC"](this);
 }
 
 void Tile::setTypeNoLua(std::string id) {
@@ -95,18 +97,6 @@ TileType *Tile::getType() {
     return type;
 }
 
-void Tile::onStanding(Player *player) {
-    Variables::lua["TileScripts"][type->id]["onStanding"](this, player);
-}
-
-void Tile::onEnter(Player *player) {
-    Variables::lua["TileScripts"][type->id]["onEnter"](this, player);
-}
-
-void Tile::onLeave(Player *player){
-    Variables::lua["TileScripts"][type->id]["onLeave"](this, player);
-}
-
 Tile::Tile(Tile &tile): hitbox(tile.hitbox) {
     this->type = tile.type;
     this->x = tile.x;
@@ -115,10 +105,56 @@ Tile::Tile(Tile &tile): hitbox(tile.hitbox) {
 
 }
 
-void Tile::onBreak(Player *player) {
-    Variables::lua["TileScripts"][type->id]["onBreak"](this, player);
+void Tile::onStandingNPC(NPC *player) {
+    Variables::lua["TileScripts"][type->id]["onStanding"](this, player);
 }
 
-void Tile::onCreate(Player *player) {
-    Variables::lua["TileScripts"][type->id]["onCreate"](this, player);
+void Tile::onEnterNPC(NPC *player) {
+    Variables::lua["TileScripts"][type->id]["onEnter"](this, player);
+}
+
+void Tile::onLeaveNPC(NPC *player){
+    Variables::lua["TileScripts"][type->id]["onLeave"](this, player);
+}
+
+void Tile::onStandingPlayer(Player *player) {
+    Variables::lua["TileScripts"][type->id]["onStanding"](this, player);
+}
+
+void Tile::onEnterPlayer(Player *player) {
+    Variables::lua["TileScripts"][type->id]["onEnter"](this, player);
+}
+
+void Tile::onLeavePlayer(Player *player){
+    Variables::lua["TileScripts"][type->id]["onLeave"](this, player);
+}
+
+void Tile::onStanding(Entity *entity) {
+    if(auto *player = dynamic_cast<Player*>(entity)) {
+        onStandingPlayer(player);
+    } else {
+        onStandingNPC((NPC*)entity);
+    }
+}
+void Tile::onEnter(Entity *entity) {
+    if(auto *player = dynamic_cast<Player*>(entity)) {
+        //std::cout << "Player" << std::endl;
+        onEnterPlayer(player);
+    } else {
+        //std::cout << "NPC" << std::endl;
+        onEnterNPC((NPC*)entity);
+    }
+}
+void Tile::onLeave(Entity *entity) {
+    if(auto *player = dynamic_cast<Player*>(entity)) {
+        onLeavePlayer(player);
+    } else {
+        onLeaveNPC((NPC*)entity);
+    }
+}
+void Tile::onBreak() {
+    Variables::lua["TileScripts"][type->id]["onBreak"](this);
+}
+void Tile::onCreate() {
+    Variables::lua["TileScripts"][type->id]["onCreate"](this);
 }

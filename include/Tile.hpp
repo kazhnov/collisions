@@ -9,6 +9,9 @@
 #include <string>
 #include <vector>
 
+class NPC;
+
+class Entity;
 struct TileType {
     const Texture2D texture;
     const Vector2 size;
@@ -96,9 +99,18 @@ public:
     );
     }
 
-    void onStanding(Player *player);
-    void onEnter(Player *player);
-    void onLeave(Player *player);
-    void onBreak(Player *player);
-    void onCreate(Player *player);
+    void onStanding(Entity *player);
+    void onEnter(Entity *player);
+    void onLeave(Entity *player);
+
+    void onStandingNPC(NPC *player);
+    void onEnterNPC(NPC *player);
+    void onLeaveNPC(NPC *player);
+
+    void onStandingPlayer(Player *player);
+    void onEnterPlayer(Player *player);
+    void onLeavePlayer(Player *player);
+
+    void onBreak();
+    void onCreate();
 };

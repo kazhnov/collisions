@@ -5,10 +5,12 @@
 #include <raymath.h>
 #include "Item.hpp"
 #include "Collider.hpp"
+#include "Entity.hpp"
+
 struct TileInfo;
 
 class Game;
-struct Player {
+class Player : public Entity {
     public:
         Collider collider;
         Game *game;
@@ -18,21 +20,14 @@ struct Player {
         float reach = 4.0;
         std::array<std::optional<Item>, 36> inventory{};
         uint selectedSlot = 0;
-        std::vector<TileInfo*> prevColliding {};
         float cooldown;
         Player(Vector2 pos, Vector2 size, Color color);
 
         Player();
 
-        void selectNext();
-
         static void initLua();
 
-        void setGame(Game *game);
-
         void useSelected(Vector2 pos);
-
-        bool moveAndCollideWithTiles(double delta); 
 
         void applyAcceleration(Vector2 acc, double delta);
 
@@ -40,16 +35,24 @@ struct Player {
 
         void drawReach();
 
-        Vector2 getPos(); 
-
         bool putTile(Vector2 pos, std::string id);
 
         bool putTileWithReach(Vector2 pos, std::string id, float reach);
 
-        void setPos(Vector2 pos); 
-
-        void draw(); 
+        void draw();
 
         void drawCollisions();
+
+        Vector2 getPos() override;
+
+        void setPos(Vector2 pos) override;
+
+        void setVel(Vector2 vel) override;
+
+        Vector2 getVel() override;
+
+        Collider *getCollider() override;
+
+        void setCollider(Collider collider) override;
 };
 
