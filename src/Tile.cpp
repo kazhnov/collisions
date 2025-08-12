@@ -3,6 +3,7 @@
 #include <mutex>
 #include <string>
 #include <iostream>
+#include <utility>
 #include "Player.hpp"
 #include "Entity.hpp"
 #include "NPC.hpp"
@@ -19,14 +20,14 @@ isWalkable(isWalkable)
 }
 
 TileType::TileType(std::string id, Vector2 size) :
-    TileType(id, size, WHITE, false)
+    TileType(std::move(id), size, WHITE, false)
 {
 }
 
 //Tile
-Tile::Tile(std::string id, Vector2 pos) :
-    type(TileTypes::get(id)), hitbox({(int)(pos.x) + 0.5f, (int)(pos.y) + 0.5f}, type->size),
-    x(std::floor(pos.x)), y(std::floor(pos.y))
+Tile::Tile(const std::string& id, Vector2 pos) :
+    x(std::floor(pos.x)), y(std::floor(pos.y)),
+    type(TileTypes::get(id)), hitbox({float(pos.x) + 0.5f, float(pos.y) + 0.5f}, type->size)
 {
     data = Variables::lua.create_table();
 }
@@ -36,9 +37,9 @@ Tile::~Tile() {
 }
 
 Tile::Tile(): 
-    type(TileTypes::get("void")),
-    hitbox({}, {}),
-    x(0), y(0)
+    x(0),
+    y(0),
+    type(TileTypes::get("void")), hitbox({}, {})
 {
 
 }
@@ -70,12 +71,12 @@ void Tile::initialize() {
     Variables::lua["TileScripts"][type->id]["onCreateNPC"](this);
 }
 
-void Tile::setTypeNoLua(std::string id) {
+void Tile::setTypeNoLua(const std::string& id) {
     type = TileTypes::get(id);
     hitbox.setDim({type->size.x, type->size.y});
 }
 
-Vector2 Tile::getPos() {
+Vector2 Tile::getPos() const {
     return Vector2{(float)x, (float)y};
 }
 

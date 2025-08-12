@@ -16,11 +16,11 @@ struct NPCType {
 
 struct NPCTypes {
     static inline std::vector<NPCType> data{};
-    static void add(std::string id, Vector2 size, float speed) {
-        data.push_back(NPCType(id, size, speed));
+    static void add(const std::string& id, Vector2 size, float speed) {
+        data.emplace_back(id, size, speed);
     }
 
-    static NPCType *get(std::string id) {
+    static NPCType *get(const std::string& id) {
         for (auto &entity : data) {
             if (entity.id == id) {
                 return &entity;

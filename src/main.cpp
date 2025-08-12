@@ -1,7 +1,4 @@
 #include "NPC.hpp"
-#define CUTE_C2_IMPLEMENTATION
-#include <cute_c2.h>
-#define SOL_ALL_SAFETIES_ON 1
 #include "Pane.hpp"
 #include "Tile.hpp"
 #include "Item.hpp"
@@ -21,7 +18,7 @@ Vector2 Vector2Floor(Vector2 v) {
 }
 
 int main() {
-    Display display;
+    Display display{};
     display.width = 1280;
     display.height = 800;
     InitWindow(display.width,display.height, "Penis");
@@ -68,9 +65,7 @@ int main() {
     Variables::lua["player"] = &player;
     Variables::lua["game"] = &game;
 
-    Color color;
-
-    for (int i = 0; i < std::min((size_t)36, ItemTypes::data.size()); i++)
+    for (uint i = 0; i < std::min((size_t)36, ItemTypes::data.size()); i++)
         player.inventory.at(i) = Item(ItemTypes::data.at(i).id, 64);
 
     NPC enemy("enemy", {});
@@ -116,7 +111,7 @@ int main() {
             Variables::PixelsPerMeter += GetMouseWheelMove() * 5;
             Variables::PixelsPerMeter = Clamp(Variables::PixelsPerMeter, 16, 256);
             deltaVel = Vector2Normalize(deltaVel);
-            if (deltaVel.x || deltaVel.y) {
+            if (deltaVel.x != 0 || deltaVel.y != 0) {
                 player.accelerateTowards(Vector2Scale(deltaVel, 10), delta, 2);
             }
             else {
@@ -154,10 +149,6 @@ int main() {
                 game.draw();
                 player.draw();
 
-
-                //player.drawCollisions();
-
-                //player.selectedTile->draw();
             } EndMode2D();
             if (inventory.visible){
                 inventory.draw();

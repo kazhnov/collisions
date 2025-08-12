@@ -1,13 +1,14 @@
 #pragma once
 #include <raylib.h>
-#include <cute_c2.h>
+
+struct c2AABB;
 
 class Collider {
 public:
     Vector2 pos{};
     Vector2 dim{};
     bool collided = false;
-    Vector2 lastCollisionNormal;
+    Vector2 lastCollisionNormal{};
     Collider(Vector2 pos, Vector2 dimensions): pos(pos), dim(dimensions) {};
 
     c2AABB getAABB(); 
@@ -20,11 +21,11 @@ public:
 
     bool isColliding(Collider &target); 
 
-    Vector2 getDim() {return dim;};
+    [[nodiscard]] Vector2 getDim() const {return dim;};
 
     void setDim(Vector2 dim) {this->dim = dim;};
 
-    Vector2 getPos() {return pos;};
+    [[nodiscard]] Vector2 getPos() const {return pos;};
 
     void setPos(Vector2 pos) {this->pos = pos;};
 };

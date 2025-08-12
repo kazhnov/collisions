@@ -26,7 +26,7 @@ namespace GUI {
             Vector2 position;
             position.x = pos.x - size.x * anchor.x;
             position.y = pos.y - size.y * anchor.y;
-            Rectangle frame = Rectangle{.x = position.x, .y = position.y, .width = size.x, .height = size.y};
+            auto frame = Rectangle{.x = position.x, .y = position.y, .width = size.x, .height = size.y};
             DrawRectangleRec(frame, GRAY);
             frame.x += thickness;
             frame.y += thickness;
@@ -54,7 +54,7 @@ namespace GUI {
             Vector2 position;
             position.x = pos.x - size.x * anchor.x;
             position.y = pos.y - size.y * anchor.y;
-            Rectangle frame = Rectangle{.x = position.x, .y = position.y, .width = size.x, .height = size.y};
+            auto frame = Rectangle{.x = position.x, .y = position.y, .width = size.x, .height = size.y};
             DrawRectangleRec(frame, i==selected? YELLOW : GRAY);
             frame.x += itemThickness;
             frame.y += itemThickness;
@@ -65,7 +65,7 @@ namespace GUI {
                 items.at(i)->draw({frame.x, frame.y}, {frame.width, frame.height}, {});
         };
 
-        uint get(Vector2 mouse) {
+        int get(Vector2 mouse) {
             Vector2 position;
             position.x = pos.x - size.x * anchor.x + thickness;
             position.y = pos.y - size.y * anchor.y + thickness;

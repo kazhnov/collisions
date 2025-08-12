@@ -3,7 +3,6 @@
 #include "Variables.hpp"
 #include <raylib.h>
 #include <raymath.h>
-#include <cute_c2.h>
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 #include <string>
@@ -28,14 +27,14 @@ class TileTypes {
 private:    
     static inline std::vector<TileType> data = {};
 public:
-    static void add(std::string id, Vector2 size, Color color) {
-        data.push_back(TileType(id, size, color, true));
+    static void add(const std::string& id, Vector2 size, Color color) {
+        data.emplace_back(id, size, color, true);
     }
-    static void add(std::string id, Vector2 size, Color color, bool isWalkable) {
-        data.push_back(TileType(id, size, color, isWalkable));
+    static void add(const std::string& id, Vector2 size, Color color, bool isWalkable) {
+        data.emplace_back(id, size, color, isWalkable);
     }
 
-    static TileType *get(std::string id) {
+    static TileType *get(const std::string& id) {
         for (auto &tile : data) {
             if (tile.id == id) {
                 return &tile;
@@ -52,7 +51,7 @@ public:
             "isWalkable", sol::readonly_property(&TileType::isWalkable)
         );
 
-        Variables::lua.set_function("addTileType", sol::resolve<void(std::string, Vector2, Color, bool)>(&TileTypes::add));
+        Variables::lua.set_function("addTileType", sol::resolve<void(const std::string&, Vector2, Color, bool)>(&TileTypes::add));
     }
 };
 class Player;
@@ -64,7 +63,7 @@ private:
     Collider hitbox;
 public:
     sol::table data;
-    Tile(std::string id, Vector2 pos);
+    Tile(const std::string& id, Vector2 pos);
 
     ~Tile();
 
@@ -76,9 +75,9 @@ public:
 
     void setType(std::string id);
 
-    void setTypeNoLua(std::string id);
+    void setTypeNoLua(const std::string& id);
 
-    Vector2 getPos();
+    [[nodiscard]] Vector2 getPos() const;
 
     void setPos(int x, int y);
 

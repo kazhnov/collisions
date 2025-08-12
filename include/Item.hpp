@@ -25,11 +25,11 @@ public:
 class ItemTypes {
 public:
     static inline std::vector<ItemType> data{};
-    static void add(std::string id, ItemEnum type) {
-        data.push_back(ItemType(id, type));
+    static void add(const std::string& id, ItemEnum type) {
+        data.emplace_back(id, type);
     }
 
-    static ItemType *get(std::string id) {
+    static ItemType *get(const std::string& id) {
         for (auto &item : data) {
             if (item.id == id) {
                 return &item;

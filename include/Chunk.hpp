@@ -8,7 +8,7 @@ public:
     Tile tiles[CHUNKSIZE*CHUNKSIZE];
     Chunk(int x, int y); 
 
-    Vector2 getPos() {
+    [[nodiscard]] Vector2 getPos() const {
         return {(float)posX, (float)posY};
     }
 
