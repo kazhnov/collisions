@@ -1,1 +1,1 @@
-addEntityType("enemy", Vector2(0.5, 0.5), 5)
+addNPCType("enemy", Vector2(0.5, 0.5), 5)

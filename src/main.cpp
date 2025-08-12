@@ -1,4 +1,4 @@
-#include "Entity.hpp"
+#include "NPC.hpp"
 #define CUTE_C2_IMPLEMENTATION
 #include <cute_c2.h>
 #define SOL_ALL_SAFETIES_ON 1
@@ -34,7 +34,8 @@ int main() {
     TileTypes::initLua();
     Item::initLua();
     ItemTypes::initLua();
-    EntityTypes::initLua();
+    NPCTypes::initLua();
+    NPC::initLua();
     Variables::lua.do_file("../lua/init.lua");
     Variables::RenderDistance = 4;
 
@@ -72,9 +73,11 @@ int main() {
     for (int i = 0; i < std::min((size_t)36, ItemTypes::data.size()); i++)
         player.inventory.at(i) = Item(ItemTypes::data.at(i).id, 64);
 
-    Entity enemy("enemy", {});
+    NPC enemy("enemy", {});
     enemy.setGoal({5, 0});
     enemy.calculateRoute();
+
+    Variables::lua["enemy"] = &enemy;
 
     while (!WindowShouldClose()) {
         double delta = GetFrameTime();
@@ -92,9 +95,7 @@ int main() {
         Vector2 mouseScreen = GetMousePosition();
         Vector2 mouse = GetScreenToWorld2D(mouseScreen, camera);
         mouse = Vector2Scale(mouse, 1.f/Variables::PixelsPerMeter);
-        mouse.x -= 0.5;
-        mouse.y -= 0.5;
-        
+
         if (IsKeyPressed(KEY_TAB)) {
             inventory.visible = !inventory.visible;
         }
@@ -135,11 +136,9 @@ int main() {
             }
             player.accelerateTowards({}, delta, 10);
         }
-        player.moveAndCollideWithTiles(delta);
+        player.moveAndCollide(delta);
 
         camera.target = Vector2Scale(player.getPos(), Variables::PixelsPerMeter);
-
-        //enemy.calculateRoute();
 
         BeginDrawing(); {
             ClearBackground(BLACK);

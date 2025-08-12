@@ -2,15 +2,16 @@
 #include <vector>
 #include <raylib.h>
 #include <string>
-#include "Chunk.hpp"
+#include <memory>
 
+class Chunk;
 class Tile;
 class Display;
 class Player;
 
 class Game {
-    std::vector<Chunk> chunks{};
-    static Chunk loadChunk(int x, int y);
+    std::vector<std::unique_ptr<Chunk>> chunks;
+    static Chunk* loadChunk(int x, int y);
     public:
         Display &display;
         Player &player;
@@ -21,6 +22,7 @@ class Game {
         Chunk *getChunkptrFromPos(Vector2 pos);
         bool putTile(Vector2 pos, std::string id);
         void updateChunks();
+        ~Game();
 
         void draw(); 
         static void initLua();

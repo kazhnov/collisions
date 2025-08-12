@@ -8,7 +8,9 @@ function TileScripts.reach.onDelete(block)
 end
 
 function TileScripts.reach.onEnter(block, entity)
-    entity.reach = entity.reach + block.data.reach
+    if (entity.__type.name == "Player") then
+        entity.reach = entity.reach + block.data.reach
+    end
 end
 
 function TileScripts.reach.onLeave(block, entity)

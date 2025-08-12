@@ -1,6 +1,7 @@
 #include "Game.hpp"
 #include "Player.hpp"
 #include "Variables.hpp"
+#include "Chunk.hpp"
 #include <algorithm>
 #include <cassert>
 #include <chrono>
@@ -45,10 +46,10 @@ Game::Game(Player &player, Display &display) : player(player), display(display) 
     Variables::lua["game"] = this;
 }
 
-Chunk Game::loadChunk(int x, int y) {
+Chunk* Game::loadChunk(int x, int y) {
     //std::lock_guard<std::mutex>lock(chunkMutex);
     //std::lock_guard<std::mutex> guard(Variables::mutex);
-    return Chunk(x, y);
+    return new Chunk(x, y);
 }
 
 void Game::updateChunks() {
@@ -57,23 +58,23 @@ void Game::updateChunks() {
     Vector2 centerPos = center->getPos();
     //std::cout <<centerPos.x << "\t" << centerPos.y << std::endl;
 
-    std::vector<Chunk>::iterator it = chunks.begin();
+    auto it = chunks.begin();
     while (it !=chunks.end()){
         if (
-            std::abs(centerPos.x - it->getPos().x) > Variables::RenderDistance ||
-            std::abs(centerPos.y - it->getPos().y) > Variables::RenderDistance
+            std::abs(centerPos.x - it->get()->getPos().x) > Variables::RenderDistance ||
+            std::abs(centerPos.y - it->get()->getPos().y) > Variables::RenderDistance
         ) {
-            it->save();
+            it->get()->save();
             it = chunks.erase(it);
         }
         else ++it;
     }
     
     for (auto &chunk: chunks) {
-        chunkPos.push_back(chunk.getPos());
+        chunkPos.push_back(chunk->getPos());
     }
     //std::cout << std::this_thread::get_id() << std::endl;
-    std::vector<std::future<Chunk>> chunkFutures{};
+    std::vector<std::future<Chunk*>> chunkFutures{};
     for (int i = -Variables::RenderDistance; i <= Variables::RenderDistance; i++) {
         for (int j = -Variables::RenderDistance; j <= Variables::RenderDistance; j++) {
             int x = centerPos.x + j;
@@ -90,8 +91,9 @@ void Game::updateChunks() {
         }
     }
     for (auto &chunkF : chunkFutures) {
-        chunks.push_back(chunkF.get());
-        (chunks.end()-1)->initialize();
+        Chunk *chunk = chunkF.get();
+        chunk->initialize();
+        chunks.push_back(std::unique_ptr<Chunk>(chunk));
         //std::cout << "loaded chunk " << chunks.size() << std::endl;
     }
     chunkFutures.clear();
@@ -128,21 +130,19 @@ bool Game::putTile(Vector2 pos, std::string id) {
     
     if (!onChange) return false;
 
-    Variables::lua["TileScripts"][oldid]["onDelete"](old);
+    old->onBreak();
     old->setType(id);
-    Variables::lua["TileScripts"][id]["onCreate"](old);
+    old->onCreate();
     return true;
 }
 
 void Game::draw() {
     for (auto &chunk : chunks) {
-        chunk.draw();
+        chunk->draw();
     }
 }
 
 Chunk *Game::getChunkptrFromPos(Vector2 pos) {
-    pos.x += 0.5f;
-    pos.y += 0.5f;
     int x = std::floor(pos.x);
     int y = std::floor(pos.y);
     x = std::floor(x / (float)CHUNKSIZE);
@@ -152,18 +152,13 @@ Chunk *Game::getChunkptrFromPos(Vector2 pos) {
 }
 
 Chunk *Game::getChunkptr(int x, int y) {
-    for (int i = 0; i < chunks.size(); i++) {
-        if (chunks[i].getPos() == Vector2{(float)x, (float)y}) {
-            return chunks.data() + i;
+    for (size_t i = 0; i < chunks.size(); i++) {
+        if (chunks[i]->getPos() == Vector2{(float)x, (float)y}) {
+            return chunks[i].get();
         }
     }
-    Chunk chunk(x, y);
-    chunks.push_back(chunk);
-    for (int i = 0; i < chunks.size(); i++) {
-        if (chunks[i].getPos() == Vector2{(float)x, (float)y}) {
-            return chunks.data() + i;
-        }
-    }
+    chunks.push_back(std::make_unique<Chunk>(x,y));
+    return (chunks.end()-1)->get();
     assert(false);
 }
 
@@ -181,6 +176,9 @@ void Game::initLua() {
 
 void Game::save() {
     for (auto &chunk : chunks) {
-        chunk.save();
+        chunk->save();
     }
 }
+
+Game::~Game() = default;
+

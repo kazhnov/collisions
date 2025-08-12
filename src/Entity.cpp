@@ -1,109 +1,17 @@
 #include "Entity.hpp"
 #include "Variables.hpp"
-#include <algorithm>
-#include <cmath>
-#include <ostream>
-#include <raylib.h>
-#include <raymath.h>
-#include <vector>
-#include "Game.hpp"
+#include "Tile.hpp"
 #include "TileInfo.hpp"
+#include "Collider.hpp"
+#include "Game.hpp"
 
-EntityType::EntityType(std::string id, Vector2 size, float speed):
-    id(id), size(size), speed(speed)
-{}
-
-Entity::Entity(std::string id, Vector2 pos):
-    type(EntityTypes::get(id)), 
-    collider(pos, type->size),
-    texture(LoadTexture((Variables::TexturePath+id+".png").c_str()))
-{}
-
-void Entity::setGoal(Vector2 pos) {
-    goal = pos;
-}
-
-Vector2 Entity::getGoal() {
-    return goal;
-}
-
-void Entity::moveToGoal(double delta) {
-    if (route.empty()) return;
-    vel = Vector2Normalize(Vector2Subtract(*route.begin(), getPos()));
-    vel = Vector2Scale(vel, type->speed);
-}
-
-Vector2 Entity::getPos() {
-    return collider.pos;
-}
-
-void Entity::setPos(Vector2 pos) {
-    collider.pos = pos;
-}
-
-float getDistance(Vector2 pos, Vector2 goal) {
-    //return Vector2Distance(pos, goal);
-    return std::abs(pos.x - goal.x) + std::abs(pos.y - goal.y);
-}
-
-float Node::sum() {
-    return to + from;
-}
-
-Vector2I::Vector2I(Vector2 vec) {
-    this->x = std::floor(vec.x);
-    this->y = std::floor(vec.y);
-}
-
-Vector2 getNeighbour(Vector2 pos, uint dir) {
-    pos.x = std::floor(pos.x) + 0.5;
-    pos.y = std::floor(pos.y) + 0.5;
-    switch (dir) {
-        case 0:
-            pos.x += 1;
-            break;
-        case 1:
-            pos.x -= 1;
-            break;
-        case 2: 
-            pos.y += 1;
-            break;
-        case 3:
-            pos.y -= 1;
-            break;
-        default:
-            break;
-    }
-    return pos;
-}
-
-void sortNodes(std::vector<Node*> &nodes) {
-    std::sort(nodes.begin(), nodes.end(), [](Node *a, Node *b) { 
-        return a->sum() > b->sum();
-    });
-}
-
-std::vector<Node*>::iterator getSame(std::vector<Node*> &nodes, Vector2 pos) {
-    return std::find_if(nodes.begin(), nodes.end(), [pos](Node *node) {
-        return std::floor(node->pos.x) == std::floor(pos.x) &&
-             std::floor(node->pos.y) == std::floor(pos.y);
-    });
-}
-void Entity::draw() {
-    Vector2 position = {
-            collider.pos.x - collider.dim.x/2.f, collider.pos.y - collider.dim.y/2.f
-    };
-    position = Vector2Scale(position, Variables::PixelsPerMeter);
-    float scale = (float)Variables::PixelsPerMeter*collider.dim.x/texture.width;
-    DrawTextureEx(texture, position, 0, scale, WHITE);
-}
 
 bool Entity::moveAndCollide(double delta) {
     double dt = delta/MAX_COLLISION_COUNT;
 
     std::vector<Tile*> tilesToCheck{};
-    float posX = collider.pos.x;
-    float posY = collider.pos.y;
+    float posX = getCollider()->pos.x;
+    float posY = getCollider()->pos.y;
 
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
@@ -117,139 +25,47 @@ bool Entity::moveAndCollide(double delta) {
     for (int i = 0; i < MAX_COLLISION_COUNT + 1; i++) {
         for (auto tile : tilesToCheck) {
             Collider collision = tile->getHitbox();
-            if (collider.isColliding(collision)) {
+            if (getCollider()->isColliding(collision)) {
                 colliding.push_back(tile);
                 if (!tile->getType()->isWalkable) {
-                    collider.preventCollisionWithStatic(collision);
-                    float collisionFactor = -Vector2DotProduct(collider.lastCollisionNormal, vel);
+                    getCollider()->preventCollisionWithStatic(collision);
+                    float collisionFactor = -Vector2DotProduct(getCollider()->lastCollisionNormal, getVel());
                     collisionFactor = std::max(collisionFactor, 0.f);
-                    vel = Vector2Add(vel, Vector2Scale(collider.lastCollisionNormal, -Vector2DotProduct(collider.lastCollisionNormal, vel)));
+                    setVel(Vector2Add(getVel(), Vector2Scale(getCollider()->lastCollisionNormal, collisionFactor)));
                 }
             }
         }
         if (i != MAX_COLLISION_COUNT)
-            setPos(Vector2Add(getPos(), Vector2Scale(vel, dt)));
+            setPos(Vector2Add(getPos(), Vector2Scale(getVel(), dt)));
 
         for (auto tile : colliding) {
-            if (std::find_if(prevColliding.begin(), prevColliding.end(), [tile](TileInfo &info){
-                return info.tile == tile;
+            if (std::find_if(prevColliding.begin(), prevColliding.end(), [tile](TileInfo *info){
+                return info->tile == tile;
             }) == prevColliding.end()) {
+                tile->onEnter(this);
             }
         }
 
-        for (auto tile : prevColliding) {
-            auto found = std::find(colliding.begin(), colliding.end(), tile.tile);
-            if (found == colliding.end() || colliding[found - colliding.begin()]->getType()->id != tile.id) {
-                //Variables::lua["TileScripts"][tile.id]["onLeave"](tile.tiledata, this);
+        for (auto &tile : prevColliding) {
+            auto found = std::find(colliding.begin(), colliding.end(), tile->tile);
+            if (found == colliding.end() || colliding[found - colliding.begin()]->getType()->id != tile->id) {
+                tile->old.onLeave(this);
             } else {
-                //Variables::lua["TileScripts"][tile.id]["onStanding"](tile.tiledata, this);
+                tile->tile->onStanding(this);
             }
         }
 
-        prevColliding.clear();
-        for (auto tile : colliding) {
-            prevColliding.push_back({tile, *tile, tile->getType()->id});
+        for (auto info : prevColliding) {
+            delete info;
         }
+        prevColliding.clear();
+        for (auto &tile: colliding) {
+            TileInfo *info = new TileInfo(tile);
+            prevColliding.push_back(info);
+        }
+
 
         colliding.clear();
     }
     return false;
-}
-
-void Entity::calculateRoute() {
-    float maxDistance = 16;
-    if (!Variables::game->getTileptr(getGoal())->getType()->isWalkable ||
-        !Variables::game->getTileptr(getPos())->getType()->isWalkable) return;
-    close.clear();
-    route.clear();
-
-    //std::vector<Node*> close{};
-    std::vector<Node*> open{};
-    //std::cout << getDistance(getPos(), goal) << std::endl;
-    open.push_back(new Node{getPos(), 0, getDistance(getPos(), goal), nullptr});
-    
-    Node *origin = open.back();
-    Node *goalNode = nullptr;
-
-    while(!open.empty() && goalNode == nullptr) {
-        sortNodes(open);
-        Node *node = open.back();
-        open.pop_back();
-        if(getSame(close, node->pos)!=close.end()) {
-            continue;
-        }
-
-        if (getDistance(node->pos, goal) <= 0.51) {
-            goalNode = node;
-            continue;
-        } else if (node->sum() > maxDistance || !Variables::game->getTileptr(node->pos)->getType()->isWalkable) {
-            close.push_back(node);
-            continue;
-        }
-
-        for (int i = 0; i < 4; i++) {
-            if(getSame(close, getNeighbour(node->pos, i)) != close.end()) {
-                continue;
-            }
-            Node *neighbour = new Node;
-            neighbour->pos = getNeighbour(node->pos, i);
-            neighbour->parent = node;
-            neighbour->to = getDistance(neighbour->pos, node->pos);
-            neighbour->from = getDistance(neighbour->pos, goal);
-            
-
-            auto inOpen = getSame(open, neighbour->pos);
-            if (inOpen != open.end()){
-                if (open[inOpen - open.begin()]->sum() <= neighbour->sum()) {
-                    delete neighbour;
-                } else {
-                    Node *old = open[inOpen-open.begin()];
-                    delete old;
-                    open.erase(inOpen);
-                    open.push_back(neighbour);
-                }
-            }
-            else {
-                open.push_back(neighbour);
-            }
-        }
-    }
-    if (goalNode == nullptr) return;
-    route.clear();
-
-
-    while(goalNode != origin) {
-        route.push_back(goalNode->pos);
-        goalNode = goalNode->parent;
-    }
-
-    for (auto node : open) {
-        delete node;
-    }
-
-    std::reverse(route.begin(), route.end());
-
-}
-
-void Entity::drawRoute() {
-    /*
-    for (auto &node : close) {
-        Rectangle a;
-        a.x = node->pos.x*Variables::PixelsPerMeter;
-        a.y = node->pos.y*Variables::PixelsPerMeter;
-        a.width = Variables::PixelsPerMeter;
-        a.height = Variables::PixelsPerMeter;
-
-        DrawRectangleRec(a, {255, 255, 0, 128});
-    }
-     */
-
-    Vector2 firstPos = Vector2Scale(getPos(), Variables::PixelsPerMeter);
-    Vector2 secondPos;
-    for (auto &pos : route) {
-        secondPos = Vector2Scale(Vector2Add({(float)pos.x, (float)pos.y}, {0.5, 0.5}), Variables::PixelsPerMeter);
-        DrawLineV(firstPos, secondPos, WHITE);
-        firstPos = secondPos;
-    }
-
 }
