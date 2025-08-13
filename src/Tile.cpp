@@ -45,7 +45,7 @@ Tile::Tile():
 }
 
 void Tile::draw() {
-    if (type->texture.width) {
+    if (type->texture.width * type->texture.height * hitbox.dim.x * hitbox.dim.y) {
         Vector2 position = {
         hitbox.pos.x - hitbox.dim.x/2.f, hitbox.pos.y - hitbox.dim.y/2.f
         };

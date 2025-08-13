@@ -3,6 +3,7 @@
 #include <raylib.h>
 #include <string>
 #include <memory>
+#include "Item.hpp"
 
 class Chunk;
 class Tile;
@@ -23,6 +24,7 @@ class Game {
         Chunk *getChunkptr(int x, int y);
         Chunk *getChunkptrFromPos(Vector2 pos);
         bool putTile(Vector2 pos, std::string id);
+        std::optional<Item> breakTile(Vector2 pos);
         void updateChunks();
         ~Game();
 

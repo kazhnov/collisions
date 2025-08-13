@@ -109,3 +109,18 @@ void Player::setCollider(Collider collider) {
     this->collider = collider;
 }
 
+bool Player::breakTile(Vector2 pos) {
+    return breakTileWithReach(pos, reach);
+}
+
+bool Player::breakTileWithReach(Vector2 pos, float reach) {
+    if(Vector2Distance(pos, getPos()) > reach) return false;
+    auto item = Variables::game->breakTile(pos);
+
+    if (item.has_value()) {
+        inventory[20] = item;
+        return true;
+    }
+    return false;
+}
+

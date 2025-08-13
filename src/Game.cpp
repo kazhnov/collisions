@@ -184,5 +184,17 @@ void Game::save() {
     }
 }
 
+std::optional<Item> Game::breakTile(Vector2 pos) {
+    Tile* tile = getTileptr(pos);
+    if (tile->getType()->id == "void") {
+        return std::nullopt;
+    }
+    tile->onBreak();
+    std::string id = tile->getType()->id;
+    tile->setType("void");
+    tile->onCreate();
+    return Item(id, 1);
+}
+
 Game::~Game() = default;
 

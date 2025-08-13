@@ -39,6 +39,10 @@ class Player : public Entity {
 
         bool putTileWithReach(Vector2 pos, std::string id, float reach);
 
+        bool breakTile(Vector2 pos);
+
+        bool breakTileWithReach(Vector2 pos, float reach);
+
         void draw();
 
         void drawCollisions();

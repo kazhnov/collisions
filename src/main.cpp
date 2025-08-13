@@ -129,7 +129,7 @@ int main() {
                 player.useSelected(mouse);
             }
             if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
-                player.putTile(mouse, "void");
+                player.breakTile(mouse);
             }
         } else {
             if (IsKeyPressed(KEY_ESCAPE)) inventory.visible = false;

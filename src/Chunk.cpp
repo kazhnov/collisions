@@ -81,10 +81,10 @@ void Chunk::generate() {
             } else if(noise < SECOND) {
                 floor->setTypeNoLua("grass");
             } else {
-                floor->setTypeNoLua("error");
+                floor->setTypeNoLua("stone");
             }
             double treeNoise = perlinNoise.octave2D_01(pos.x*TREE_SCALE, pos.y*TREE_SCALE, 4);
-            if (treeNoise > 0.8) {
+            if (treeNoise > 0.7 && floor->getType()->isWalkable) {
                 Tile* tile = getRelativeTileptr(x,y);
                 tile->setPos(x,y);
                 tile->setTypeNoLua("tree");
