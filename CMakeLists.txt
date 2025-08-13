@@ -10,5 +10,8 @@ add_compile_options(-Wall -Wextra)
 add_executable(collisions src/main.cpp src/Chunk.cpp src/Collider.cpp src/Display.cpp src/NPC.cpp src/Game.cpp src/Item.cpp src/Player.cpp src/Tile.cpp
         src/TileInfo.cpp
         src/Entity.cpp
+        include/Placeable.hpp
+        include/Floor.hpp
+        src/Floor.cpp
 )
 

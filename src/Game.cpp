@@ -132,7 +132,6 @@ bool Game::putTile(Vector2 pos, std::string id) {
 
     old->onBreak();
     old->setType(id);
-    old->onCreate();
     return true;
 }
 

@@ -1,6 +1,7 @@
 #include "NPC.hpp"
 #include "Pane.hpp"
 #include "Tile.hpp"
+#include "Floor.hpp"
 #include "Item.hpp"
 #include "rayliblua.hpp"
 #include <iostream>
@@ -29,13 +30,19 @@ int main() {
     Game::initLua();
     Tile::initLua();
     TileTypes::initLua();
+    Floor::initLua();
+    FloorTypes::initLua();
     Item::initLua();
     ItemTypes::initLua();
     NPCTypes::initLua();
     NPC::initLua();
+
     Variables::lua.do_file("../lua/init.lua");
     Variables::RenderDistance = 4;
 
+    for (auto &entry : std::filesystem::directory_iterator("../lua/floors")) {
+        Variables::lua.do_file(entry.path());
+    }
     for (auto &entry : std::filesystem::directory_iterator("../lua/tiles")) {
         Variables::lua.do_file(entry.path());
     }

@@ -1,12 +1,12 @@
 #include "Tile.hpp"
-#include "Variables.hpp"
-#include <raylib.h>
+#include "Floor.hpp"
 
 class Chunk {
     int posX, posY;
 public:
     Tile tiles[CHUNKSIZE*CHUNKSIZE];
-    Chunk(int x, int y); 
+    Floor floors[CHUNKSIZE*CHUNKSIZE];
+    Chunk(int x, int y);
 
     [[nodiscard]] Vector2 getPos() const {
         return {(float)posX, (float)posY};
@@ -25,6 +25,9 @@ public:
 
     Tile *getRelativeTileptr(uint x, uint y);
     Tile *getTileptr(Vector2 pos);
+
+    Floor *getRelativeFloorptr(uint x, uint y);
+    Floor *getFloorptr(Vector2 pos);
 
     bool load();
 

@@ -68,7 +68,9 @@ void Tile::setType(std::string id) {
 
 void Tile::initialize() {
     data = Variables::lua.create_table();
-    Variables::lua["TileScripts"][type->id]["onCreateNPC"](this);
+    if (Variables::lua["TileScripts"][type->id].valid()){
+        onCreate();
+    }
 }
 
 void Tile::setTypeNoLua(const std::string& id) {

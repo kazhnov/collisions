@@ -6,6 +6,7 @@
 #include <string>
 #include <json.hpp>
 
+#include "PerlinNoise.hpp"
 
 Chunk::Chunk(int x, int y) {
     //std::cout << "Loading chunk with " << std::this_thread::get_id() << std::endl;
@@ -45,7 +46,32 @@ bool Chunk::load() {
 };
 
 void Chunk::generate() {
+    const siv::PerlinNoise::seed_type seed = 123456u;
+    const siv::PerlinNoise perlinNoise{seed};
+    const double SCALE = 0.1;
 
+    const float FIRST = 0.3;
+    const float SECOND = 0.8;
+
+    for (int y = 0; y < CHUNKSIZE; y++) {
+        for (int x = 0; x < CHUNKSIZE; x++) {
+            Floor *floor = getRelativeFloorptr(x, y);
+            Vector2 pos {
+                    (float)posX*CHUNKSIZE+x,
+                    (float)posY*CHUNKSIZE+y
+            };
+            floor->setPos(std::floor(pos.x), std::floor(pos.y));
+            double noise = perlinNoise.octave2D_01(pos.x*SCALE, pos.y*SCALE, 4);
+            if (noise < FIRST) {
+                floor->setTypeNoLua("water");
+            } else if(noise < SECOND) {
+                floor->setTypeNoLua("grass");
+            } else {
+                floor->setTypeNoLua("error");
+            }
+        }
+    }
+    std::cout << "Generated" << std::endl;
 }
 
 bool Chunk::save() {
@@ -64,7 +90,6 @@ bool Chunk::save() {
     }
     chunk["tiles"] = tilesdata;
     save << chunk << std::endl;
-
 
     return true;
 }
@@ -86,17 +111,31 @@ Tile *Chunk::getTileptr(Vector2 pos) {
     return tiles + y*CHUNKSIZE + x;
 }
 
+Floor *Chunk::getRelativeFloorptr(uint x, uint y) {
+    if(x >= CHUNKSIZE || y >= CHUNKSIZE) {
+        return nullptr;
+    }
+    return floors + y*CHUNKSIZE + x;
+}
+
+Floor *Chunk::getFloorptr(Vector2 pos) {
+    int x = std::floor(pos.x);
+    int y = std::floor(pos.y);
+
+    x = (x%CHUNKSIZE+CHUNKSIZE)%CHUNKSIZE;
+    y = (y%CHUNKSIZE+CHUNKSIZE)%CHUNKSIZE;
+
+    return floors + y*CHUNKSIZE + x;
+}
+
+
 void Chunk::draw() {
+    for (auto &floor : floors) {
+        floor.draw();
+    }
     for (auto &tile : tiles) {
         tile.draw();
-    }/*
-    DrawRectangleLines(
-        posX*CHUNKSIZE*Variables::PixelsPerMeter, 
-        posY*CHUNKSIZE*Variables::PixelsPerMeter, 
-        CHUNKSIZE*Variables::PixelsPerMeter, 
-        CHUNKSIZE*Variables::PixelsPerMeter, 
-        YELLOW);
-        */
+    }
 }
 
 void Chunk::initialize() {
@@ -105,6 +144,9 @@ void Chunk::initialize() {
             Tile *tile = getRelativeTileptr(x, y);
             tile->setPos(posX*CHUNKSIZE+x, posY*CHUNKSIZE+y);
             tile->initialize();
+            Floor *floor = getRelativeFloorptr(x, y);
+            floor->setPos(posX*CHUNKSIZE+x, posY*CHUNKSIZE+y);
+            floor->initialize();
         }
     }
 }

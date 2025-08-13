@@ -1,32 +1,28 @@
 #pragma once
-#include "Collider.hpp"
-#include "Variables.hpp"
-#include "Placeable.hpp"
 #include <raylib.h>
-#include <raymath.h>
-#define SOL_ALL_SAFETIES_ON 1
-#include <sol/sol.hpp>
 #include <string>
 #include <vector>
+#include "Placeable.hpp"
+#include "Variables.hpp"
+#include <sol/sol.hpp>
 
-class NPC;
 
-class Entity;
-struct TileType {
+class FloorType {
+public:
     const Texture2D texture;
     const Vector2 size;
     const Color color;
     const bool isWalkable;
-    bool isScriptable = false;
     const std::string id;
-    TileType(std::string id, Vector2 size, Color color, bool isWalkable);
 
-    TileType(std::string id, Vector2 size);
+    FloorType(std::string id, Vector2 size, Color color, bool isWalkable);
+
+    FloorType(std::string id, Vector2 size);
 };
 
-class TileTypes {
-private:    
-    static inline std::vector<TileType> data = {};
+class FloorTypes {
+private:
+    static inline std::vector<FloorType> data = {};
 public:
     static void add(const std::string& id, Vector2 size, Color color) {
         data.emplace_back(id, size, color, true);
@@ -35,7 +31,7 @@ public:
         data.emplace_back(id, size, color, isWalkable);
     }
 
-    static TileType *get(const std::string& id) {
+    static FloorType *get(const std::string& id) {
         for (auto &tile : data) {
             if (tile.id == id) {
                 return &tile;
@@ -45,35 +41,34 @@ public:
     }
 
     static void initLua() {
-        Variables::lua.new_usertype<TileType>("TileType",
-            "size", sol::readonly_property(&TileType::size),
-            "id", sol::readonly_property(&TileType::id),
-            "color", sol::readonly_property(&TileType::color),
-            "isWalkable", sol::readonly_property(&TileType::isWalkable)
+        Variables::lua.new_usertype<FloorType>("FloorType",
+                                              "size", sol::readonly_property(&FloorType::size),
+                                              "id", sol::readonly_property(&FloorType::id),
+                                              "color", sol::readonly_property(&FloorType::color),
+                                              "isWalkable", sol::readonly_property(&FloorType::isWalkable)
         );
 
-        Variables::lua.set_function("addTileType", sol::resolve<void(const std::string&, Vector2, Color, bool)>(&TileTypes::add));
+        Variables::lua.set_function("addFloorType", sol::resolve<void(const std::string&, Vector2, Color, bool)>(&FloorTypes::add));
     }
 };
-class Player;
-class Tile : public Placeable {
+class Floor : Placeable{
 private:
     int x;
     int y;
-    TileType *type;
+    FloorType *type;
     Collider hitbox;
 public:
     sol::table data;
-    Tile(const std::string& id, Vector2 pos);
 
-    ~Tile();
+    Floor(const std::string& id, Vector2 pos);
 
-    Tile(Tile &tile);
+    ~Floor();
 
-    Tile();
+    Floor(Floor &floor);
+
+    Floor();
 
     void draw();
-
     void setType(std::string id) override;
 
     void setTypeNoLua(const std::string& id) override;
@@ -86,17 +81,17 @@ public:
 
     Collider &getHitbox() override;
 
-    TileType *getType();
-
     void initialize() override;
 
+    FloorType *getType();
+
     static void initLua() {
-        Variables::lua.new_usertype<Tile>("Tile",
-        "type", sol::property(&Tile::getType, &Tile::setType),
-        "pos", sol::property(&Tile::getPos, &Tile::setPos),
-        "hitbox", sol::readonly_property(&Tile::getHitbox),
-        "data", &Tile::data
-    );
+        Variables::lua.new_usertype<Floor>("Floor",
+                                          "type", sol::property(&Floor::getType, &Floor::setType),
+                                          "pos", sol::property(&Floor::getPos, &Floor::setPos),
+                                          "hitbox", sol::readonly_property(&Floor::getHitbox),
+                                          "data", &Floor::data
+        );
     }
 
     void onStanding(Entity *player) override;
@@ -114,3 +109,4 @@ public:
     void onBreak() override;
     void onCreate() override;
 };
+
