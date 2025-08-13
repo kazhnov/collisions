@@ -1,6 +1,7 @@
 #include "Entity.hpp"
 #include "Variables.hpp"
 #include "Tile.hpp"
+#include "Floor.hpp"
 #include "TileInfo.hpp"
 #include "Collider.hpp"
 #include "Game.hpp"
@@ -10,24 +11,37 @@ bool Entity::moveAndCollide(double delta) {
     double dt = delta/MAX_COLLISION_COUNT;
 
     std::vector<Tile*> tilesToCheck{};
+    std::vector<Floor*> floorsToCheck{};
     float posX = getCollider()->pos.x;
     float posY = getCollider()->pos.y;
 
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
             Tile *tile = Variables::game->getTileptr({posX+i,posY+j});
-            if (tile->getHitbox().getDim().x * tile->getHitbox().getDim().y == 0) continue;
             tilesToCheck.push_back(tile);
+            Floor *floor = Variables::game->getFloorptr({posX+i,posY+j});
+            floorsToCheck.push_back(floor);
         }
     }
 
     std::vector<Tile*> colliding{};
     for (int i = 0; i < MAX_COLLISION_COUNT + 1; i++) {
-        for (auto tile : tilesToCheck) {
+        for (int j = 0; j < tilesToCheck.size(); j++) {
+            Tile* tile = tilesToCheck.at(j);
             Collider collision = tile->getHitbox();
-            if (getCollider()->isColliding(collision)) {
+            if (collision.getDim().x*collision.getDim().y > 0 && getCollider()->isColliding(collision)) {
                 colliding.push_back(tile);
                 if (!tile->getType()->isWalkable) {
+                    getCollider()->preventCollisionWithStatic(collision);
+                    float collisionFactor = -Vector2DotProduct(getCollider()->lastCollisionNormal, getVel());
+                    collisionFactor = std::max(collisionFactor, 0.f);
+                    setVel(Vector2Add(getVel(), Vector2Scale(getCollider()->lastCollisionNormal, collisionFactor)));
+                }
+            }
+            Floor* floor = floorsToCheck.at(j);
+            collision = floor->getHitbox();
+            if (getCollider()->isColliding(collision)) {
+                if (!floor->getType()->isWalkable) {
                     getCollider()->preventCollisionWithStatic(collision);
                     float collisionFactor = -Vector2DotProduct(getCollider()->lastCollisionNormal, getVel());
                     collisionFactor = std::max(collisionFactor, 0.f);

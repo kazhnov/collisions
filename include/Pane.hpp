@@ -22,6 +22,11 @@ namespace GUI {
         {
         }
 
+        void adaptSize() {
+            float itemSize = (size.x-thickness*2)/columns;
+            size.y = itemSize*(amount/columns) + thickness*2;
+        }
+
         void draw() {
             Vector2 position;
             position.x = pos.x - size.x * anchor.x;

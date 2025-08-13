@@ -6,6 +6,7 @@
 
 class Chunk;
 class Tile;
+class Floor;
 class Display;
 class Player;
 
@@ -17,7 +18,8 @@ class Game {
         Player &player;
         Texture texturePlayer;
         Game(Player &player, Display &display);
-        Tile *getTileptr(Vector2 pos); 
+        Tile *getTileptr(Vector2 pos);
+        Floor *getFloorptr(Vector2 pos);
         Chunk *getChunkptr(int x, int y);
         Chunk *getChunkptrFromPos(Vector2 pos);
         bool putTile(Vector2 pos, std::string id);

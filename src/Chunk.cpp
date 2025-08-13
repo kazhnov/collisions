@@ -42,6 +42,19 @@ bool Chunk::load() {
             y++;
         }
     }
+    y = 0;
+    x = 0;
+    for (auto floordata : data["floors"]) {
+        if (y == CHUNKSIZE) std::cerr << "Too many floors in save " << path << "\n";
+        Floor *floor = getRelativeFloorptr(x, y);
+        floor->setTypeNoLua(floordata["id"]);
+        floor->setPos(posX*CHUNKSIZE+x, posY*CHUNKSIZE+y);
+        x++;
+        if (x == CHUNKSIZE) {
+            x = 0;
+            y++;
+        }
+    }
     return true;
 };
 
@@ -49,6 +62,7 @@ void Chunk::generate() {
     const siv::PerlinNoise::seed_type seed = 123456u;
     const siv::PerlinNoise perlinNoise{seed};
     const double SCALE = 0.1;
+    const double TREE_SCALE = 5;
 
     const float FIRST = 0.3;
     const float SECOND = 0.8;
@@ -60,7 +74,7 @@ void Chunk::generate() {
                     (float)posX*CHUNKSIZE+x,
                     (float)posY*CHUNKSIZE+y
             };
-            floor->setPos(std::floor(pos.x), std::floor(pos.y));
+            floor->setPos(pos.x, pos.y);
             double noise = perlinNoise.octave2D_01(pos.x*SCALE, pos.y*SCALE, 4);
             if (noise < FIRST) {
                 floor->setTypeNoLua("water");
@@ -69,9 +83,14 @@ void Chunk::generate() {
             } else {
                 floor->setTypeNoLua("error");
             }
+            double treeNoise = perlinNoise.octave2D_01(pos.x*TREE_SCALE, pos.y*TREE_SCALE, 4);
+            if (treeNoise > 0.8) {
+                Tile* tile = getRelativeTileptr(x,y);
+                tile->setPos(x,y);
+                tile->setTypeNoLua("tree");
+            }
         }
     }
-    std::cout << "Generated" << std::endl;
 }
 
 bool Chunk::save() {
@@ -89,6 +108,13 @@ bool Chunk::save() {
         tilesdata.push_back(tiledata);
     }
     chunk["tiles"] = tilesdata;
+    auto floorsdata = chunk["floors"];
+
+    for (auto &floor : floors) {
+        json floordata = {{"id", floor.getType()->id}};
+        floorsdata.push_back(floordata);
+    }
+    chunk["floors"] = floorsdata;
     save << chunk << std::endl;
 
     return true;

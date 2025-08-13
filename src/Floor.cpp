@@ -8,8 +8,8 @@
 #include "Entity.hpp"
 #include "NPC.hpp"
 
-FloorType::FloorType(std::string id, Vector2 size, Color color, bool isWalkable)
-: id(id), size(Vector2Clamp(size, {}, {1.f, 1.f})), color(color), texture(LoadTexture((Variables::TexturePath + id + ".png").c_str())),
+FloorType::FloorType(std::string id, Color color, bool isWalkable)
+: id(id), color(color), texture(LoadTexture((Variables::TexturePath + id + ".png").c_str())),
 isWalkable(isWalkable)
 {
     if (!Variables::lua["FloorScripts"].valid())
@@ -19,15 +19,15 @@ isWalkable(isWalkable)
     std::cout << "Loaded floor \"" << id << "\"\n";
 }
 
-FloorType::FloorType(std::string id, Vector2 size) :
-    FloorType(std::move(id), size, WHITE, false)
+FloorType::FloorType(std::string id) :
+    FloorType(std::move(id), WHITE, false)
 {
 }
 
 //Tile
 Floor::Floor(const std::string& id, Vector2 pos) :
     x(std::floor(pos.x)), y(std::floor(pos.y)),
-    type(FloorTypes::get(id)), hitbox({float(pos.x) + 0.5f, float(pos.y) + 0.5f}, type->size)
+    type(FloorTypes::get(id)), hitbox({float(pos.x) + 0.5f, float(pos.y) + 0.5f}, {1,1})
 {
     data = Variables::lua.create_table();
 }
@@ -62,7 +62,7 @@ void Floor::draw() {
 
 void Floor::setType(std::string id) {
     type = FloorTypes::get(id);
-    hitbox.setDim({type->size.x, type->size.y});
+    hitbox.setDim({1,1});
     initialize();
 }
 
@@ -75,7 +75,7 @@ void Floor::initialize() {
 
 void Floor::setTypeNoLua(const std::string& id) {
     type = FloorTypes::get(id);
-    hitbox.setDim({type->size.x, type->size.y});
+    hitbox.setDim({1,1});
 }
 
 Vector2 Floor::getPos() const {
@@ -94,10 +94,6 @@ void Floor::setHitbox(Collider n) {
 
 Collider &Floor::getHitbox() {
     return hitbox;
-}
-
-FloorType *Floor::getType() {
-    return type;
 }
 
 Floor::Floor(Floor &floor): hitbox(floor.hitbox) {
@@ -160,4 +156,8 @@ void Floor::onBreak() {
 }
 void Floor::onCreate() {
     Variables::lua["FloorScripts"][type->id]["onCreate"](this);
+}
+
+FloorType *Floor::getType() const {
+    return type;
 }

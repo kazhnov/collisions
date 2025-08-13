@@ -23,6 +23,7 @@ int main() {
     display.width = 1280;
     display.height = 800;
     InitWindow(display.width,display.height, "Penis");
+    SetExitKey(KEY_DELETE);
 
     Variables::lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math);
     setupLuaBindings(Variables::lua);
@@ -90,7 +91,7 @@ int main() {
         inventory.pos.y = display.height/2.;
 
         inventory.size.x = display.width*0.75;
-        inventory.size.y = display.height*0.75;
+        inventory.adaptSize();
 
         Variables::lua["update"](delta);
 
@@ -131,6 +132,7 @@ int main() {
                 player.putTile(mouse, "void");
             }
         } else {
+            if (IsKeyPressed(KEY_ESCAPE)) inventory.visible = false;
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 auto item = inventory.get(mouseScreen);
                 if (item != -1)
@@ -147,14 +149,14 @@ int main() {
             BeginMode2D(camera); {
                 
 
+                game.draw();
+                player.draw();
+                enemy.draw();
+                //enemy.drawRoute();
                 if(IsMouseButtonDown(MOUSE_RIGHT_BUTTON) || IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
                     player.drawReach();
                 }
 
-                enemy.draw();
-                enemy.drawRoute();
-                game.draw();
-                player.draw();
 
             } EndMode2D();
             if (inventory.visible){

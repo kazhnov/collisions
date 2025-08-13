@@ -1,6 +1,7 @@
 #include "NPC.hpp"
 #include "Variables.hpp"
 #include "Tile.hpp"
+#include "Floor.hpp"
 #include <algorithm>
 #include <cmath>
 #include <ostream>
@@ -104,11 +105,15 @@ void NPC::draw() {
     DrawTextureEx(texture, position, 0, scale, WHITE);
 }
 
+bool isWalkable(Vector2 pos) {
+    return Variables::game->getTileptr(pos)->getType()->isWalkable && Variables::game->getFloorptr(pos)->getType()->isWalkable;
+}
+
 void NPC::calculateRoute() {
     float maxDistance = 16;
     float minDistance = 0.5;
-    if (!Variables::game->getTileptr(getGoal())->getType()->isWalkable ||
-        !Variables::game->getTileptr(getPos())->getType()->isWalkable) return;
+    if (!isWalkable(getGoal()) ||
+        !isWalkable(getPos())) return;
     if (getDistance(getPos(), goal) <= minDistance) {
         route.clear();
         route.push_back(goal);
@@ -142,7 +147,7 @@ void NPC::calculateRoute() {
         if (getDistance(node->pos, goal) <= minDistance) {
             goalNode = node;
             continue;
-        } else if (node->sum() > maxDistance || !Variables::game->getTileptr(node->pos)->getType()->isWalkable) {
+        } else if (node->sum() > maxDistance || !isWalkable(node->pos)) {
             close.push_back(node);
             continue;
         }

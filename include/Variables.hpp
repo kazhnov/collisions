@@ -41,6 +41,7 @@ public:
         );
     }
     static inline std::mutex mutex{};
+    inline static bool fullscreenToggled = true;
 };
 
 Vector2 Vector2Floor(Vector2 v);

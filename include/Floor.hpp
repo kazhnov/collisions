@@ -10,25 +10,24 @@
 class FloorType {
 public:
     const Texture2D texture;
-    const Vector2 size;
     const Color color;
     const bool isWalkable;
     const std::string id;
 
-    FloorType(std::string id, Vector2 size, Color color, bool isWalkable);
+    FloorType(std::string id, Color color, bool isWalkable);
 
-    FloorType(std::string id, Vector2 size);
+    FloorType(std::string id);
 };
 
 class FloorTypes {
 private:
     static inline std::vector<FloorType> data = {};
 public:
-    static void add(const std::string& id, Vector2 size, Color color) {
-        data.emplace_back(id, size, color, true);
+    static void add(const std::string& id, Color color) {
+        data.emplace_back(id, color, true);
     }
-    static void add(const std::string& id, Vector2 size, Color color, bool isWalkable) {
-        data.emplace_back(id, size, color, isWalkable);
+    static void add(const std::string& id, Color color, bool isWalkable) {
+        data.emplace_back(id, color, isWalkable);
     }
 
     static FloorType *get(const std::string& id) {
@@ -42,13 +41,12 @@ public:
 
     static void initLua() {
         Variables::lua.new_usertype<FloorType>("FloorType",
-                                              "size", sol::readonly_property(&FloorType::size),
                                               "id", sol::readonly_property(&FloorType::id),
                                               "color", sol::readonly_property(&FloorType::color),
                                               "isWalkable", sol::readonly_property(&FloorType::isWalkable)
         );
 
-        Variables::lua.set_function("addFloorType", sol::resolve<void(const std::string&, Vector2, Color, bool)>(&FloorTypes::add));
+        Variables::lua.set_function("addFloorType", sol::resolve<void(const std::string&, Color, bool)>(&FloorTypes::add));
     }
 };
 class Floor : Placeable{
@@ -71,6 +69,8 @@ public:
     void draw();
     void setType(std::string id) override;
 
+    FloorType* getType() const;
+
     void setTypeNoLua(const std::string& id) override;
 
     [[nodiscard]] Vector2 getPos() const override;
@@ -82,8 +82,6 @@ public:
     Collider &getHitbox() override;
 
     void initialize() override;
-
-    FloorType *getType();
 
     static void initLua() {
         Variables::lua.new_usertype<Floor>("Floor",

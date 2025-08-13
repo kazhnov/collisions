@@ -166,6 +166,11 @@ Tile *Game::getTileptr(Vector2 pos) {
     return chunk->getTileptr(pos);
 }
 
+Floor *Game::getFloorptr(Vector2 pos) {
+    Chunk *chunk = getChunkptrFromPos(pos);
+    return chunk->getFloorptr(pos);
+}
+
 void Game::initLua() {
     Variables::lua.new_usertype<Game>("Game",
         "putTile", &Game::putTile,
