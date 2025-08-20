@@ -8,6 +8,7 @@ struct TileInfo;
 
 class Entity {
     public:
+        bool isDead = true;
         std::vector<TileInfo*> prevColliding{};
 
         virtual Vector2 getPos() = 0;
@@ -20,4 +21,8 @@ class Entity {
         virtual void setCollider(Collider collider) = 0;
 
         bool moveAndCollide(double delta);
+        virtual ~Entity() {};
+        virtual void draw() {};
+
+        virtual void onEntityCollision(Entity *entity) = 0;
 };

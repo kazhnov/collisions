@@ -33,11 +33,12 @@ void Item::setType(std::string id) {
     this->type = ItemTypes::get(id);
 }
 
-void Item::draw(Vector2 screenPos, Vector2 size, Vector2 anchor) {
+void Item::draw(Vector2 screenPos, Vector2 size, Vector2 anchor, bool levelToX) {
     ItemType *type = getType();
-    screenPos.x -= size.x*anchor.x;
-    screenPos.y -= size.y*anchor.y;
-    float scale = size.x/type->texture.width;
+    float XtoY = type->texture.width/(float)type->texture.height;
+    screenPos.x -= size.x*anchor.x*(levelToX? XtoY:1.f);
+    screenPos.y -= size.y*anchor.y*((!levelToX)? 1.f/XtoY:1.f);
+    float scale = (size.x/type->texture.width)*(XtoY);
     DrawTextureEx(type->texture, screenPos, 0, scale, WHITE);
     std::stringstream s;
     s << count;

@@ -69,7 +69,7 @@ public:
 
     void setType(std::string id);
 
-    void draw(Vector2 pos, Vector2 size, Vector2 anchor);
+    void draw(Vector2 pos, Vector2 size, Vector2 anchor, bool levelToX);
 
     static void initLua() {
         Variables::lua.new_usertype<Item>("Item",

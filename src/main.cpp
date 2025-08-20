@@ -22,6 +22,7 @@ int main() {
     Display display{};
     display.width = 1280;
     display.height = 800;
+    SetConfigFlags(FLAG_VSYNC_HINT|FLAG_MSAA_4X_HINT);
     InitWindow(display.width,display.height, "Penis");
     SetExitKey(KEY_DELETE);
 
@@ -54,7 +55,7 @@ int main() {
         Variables::lua.do_file(entry.path());
     }
 
-    SetTargetFPS(60);
+    //SetTargetFPS(60);
 
     Camera2D camera;
     camera.zoom = 1.f;
@@ -75,12 +76,13 @@ int main() {
 
     for (uint i = 0; i < std::min((size_t)36, ItemTypes::data.size()); i++)
         player.inventory.at(i) = Item(ItemTypes::data.at(i).id, 64);
-
-    NPC enemy("enemy", {});
-    enemy.setGoal({5, 0});
-    enemy.calculateRoute();
-
-    Variables::lua["enemy"] = &enemy;
+    {
+        NPC enemy("enemy", {});
+        enemy.setGoal({5, 0});
+        enemy.calculateRoute();
+        game.addNPC(enemy);
+        Variables::lua["enemy"] = game.getEntities().begin();
+    }
 
     while (!WindowShouldClose()) {
         double delta = GetFrameTime();
@@ -92,6 +94,7 @@ int main() {
 
         inventory.size.x = display.width*0.75;
         inventory.adaptSize();
+        camera.offset = {display.width/2.f - Variables::PixelsPerMeter/2.f, display.height/2.f - Variables::PixelsPerMeter/2.f};
 
         Variables::lua["update"](delta);
 
@@ -140,7 +143,7 @@ int main() {
             }
             player.accelerateTowards({}, delta, 10);
         }
-        player.moveAndCollide(delta);
+        game.update(delta);
 
         camera.target = Vector2Scale(player.getPos(), Variables::PixelsPerMeter);
 
@@ -150,8 +153,7 @@ int main() {
                 
 
                 game.draw();
-                player.draw();
-                enemy.draw();
+                //player.draw();
                 //enemy.drawRoute();
                 if(IsMouseButtonDown(MOUSE_RIGHT_BUTTON) || IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
                     player.drawReach();
@@ -168,11 +170,6 @@ int main() {
 
         } EndDrawing();
         game.updateChunks();
-        enemy.calculateRoute();
-        enemy.moveToGoal(delta);
-        enemy.moveAndCollide(delta);
-        player.cooldown -= delta;
-        if (player.cooldown < 0) player.cooldown = 0;
     }
 
     game.save();

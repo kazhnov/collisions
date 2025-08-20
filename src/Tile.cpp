@@ -46,11 +46,13 @@ Tile::Tile():
 
 void Tile::draw() {
     if (type->texture.width * type->texture.height * hitbox.dim.x * hitbox.dim.y) {
+        float scale = (float)Variables::PixelsPerMeter/type->texture.width;
+        float scaleY = (float)Variables::PixelsPerMeter/type->texture.height;
         Vector2 position = {
-        hitbox.pos.x - hitbox.dim.x/2.f, hitbox.pos.y - hitbox.dim.y/2.f
+        hitbox.pos.x - hitbox.dim.x/2.f,
+        hitbox.pos.y - hitbox.dim.y/2.f - (type->texture.height - (float)type->texture.width)/type->texture.width
         };
         position = Vector2Scale(position, Variables::PixelsPerMeter);
-        float scale = (float)Variables::PixelsPerMeter/type->texture.width;
         DrawTextureEx(type->texture, position, 0, scale, type->color);
     }
     else {

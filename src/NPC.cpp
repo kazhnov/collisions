@@ -2,6 +2,7 @@
 #include "Variables.hpp"
 #include "Tile.hpp"
 #include "Floor.hpp"
+#include "Entity.hpp"
 #include <algorithm>
 #include <cmath>
 #include <ostream>
@@ -13,7 +14,14 @@
 
 NPCType::NPCType(std::string id, Vector2 size, float speed):
     id(id), size(size), speed(speed)
-{}
+{
+    if (!Variables::lua["NPCScripts"].valid())
+        Variables::lua["NPCScripts"] = Variables::lua.create_table();
+    if (!Variables::lua["NPCScripts"][id].valid())
+        Variables::lua["NPCScripts"][id] = Variables::lua.create_table();
+    std::cout << "Loaded NPC \"" << id << "\"\n";
+
+}
 
 NPC::NPC(std::string id, Vector2 pos):
     type(NPCTypes::get(id)),
@@ -245,4 +253,16 @@ void NPC::setVel(Vector2 vel) {
 
 Vector2 NPC::getVel() {
     return vel;
+}
+
+NPC::~NPC() {
+    for (auto node : close) {
+        delete node;
+    }
+}
+
+void NPC::onEntityCollision(Entity *entity) {
+    if(NPC* npc = dynamic_cast<NPC*>(entity)) {
+        Variables::lua["NPCScripts"]["onCollide"]();
+    }
 }

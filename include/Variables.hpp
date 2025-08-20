@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sol/sol.hpp>
 #include <raylib.h>
+class Entity;
 const int MAX_COLLISION_COUNT = 16;
 const float G = 2000;
 const bool DEBUGINFO = false;
@@ -42,6 +43,7 @@ public:
     }
     static inline std::mutex mutex{};
     inline static bool fullscreenToggled = true;
+    inline static std::vector<Entity*> toDraw{};
 };
 
 Vector2 Vector2Floor(Vector2 v);

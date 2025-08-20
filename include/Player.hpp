@@ -43,9 +43,11 @@ class Player : public Entity {
 
         bool breakTileWithReach(Vector2 pos, float reach);
 
-        void draw();
+        void draw() override;
 
         void drawCollisions();
+
+        void addItem(Item item);
 
         Vector2 getPos() override;
 
@@ -58,5 +60,11 @@ class Player : public Entity {
         Collider *getCollider() override;
 
         void setCollider(Collider collider) override;
+
+        ~Player() override;
+
+        void suckEntity(Entity *entity);
+
+    void onEntityCollision(Entity *entity);
 };
 

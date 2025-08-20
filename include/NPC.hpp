@@ -74,6 +74,9 @@ public:
     void moveToGoal(double delta);
     void calculateRoute();
     void drawRoute();
-    void draw();
+    void draw() override;
     static void initLua();
+    ~NPC() override;
+
+    void onEntityCollision(Entity *entity) override;
 };

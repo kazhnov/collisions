@@ -67,7 +67,7 @@ namespace GUI {
             frame.height -= itemThickness*2;
             DrawRectangleRec(frame, bg);
             if (items.at(i).has_value())
-                items.at(i)->draw({frame.x, frame.y}, {frame.width, frame.height}, {});
+                items.at(i)->draw({frame.x+frame.width/2.f, frame.y+frame.height/2.f}, {frame.width, frame.height}, {.5f, .5f}, true);
         };
 
         int get(Vector2 mouse) {

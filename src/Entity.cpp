@@ -38,6 +38,14 @@ bool Entity::moveAndCollide(double delta) {
                     setVel(Vector2Add(getVel(), Vector2Scale(getCollider()->lastCollisionNormal, collisionFactor)));
                 }
             }
+            std::vector<Entity *> entities = Variables::game->getEntityFromPos(getPos(), std::max(getCollider()->getDim().x, getCollider()->getDim().y));
+
+            for (auto &entity : entities) {
+                if (entity->getCollider()->isColliding(*getCollider())) {
+
+                }
+            }
+
             Floor* floor = floorsToCheck.at(j);
             collision = floor->getHitbox();
             if (getCollider()->isColliding(collision)) {

@@ -1,7 +1,10 @@
 #include "Game.hpp"
+#include "Entity.hpp"
 #include "Player.hpp"
 #include "Variables.hpp"
 #include "Chunk.hpp"
+#include "ItemEntity.hpp"
+#include "NPC.hpp"
 #include <algorithm>
 #include <cassert>
 #include <chrono>
@@ -12,6 +15,12 @@
 #include <sol/forward.hpp>
 #include <thread>
 #include <type_traits>
+#include <utility>
+#include <random>
+
+static std::random_device dev;
+static std::mt19937 rng(dev());
+static std::uniform_real_distribution<> random_value (0.f, 1.f); // distribution in range [1, 6]
 
 /*
 void Game::initialize() {
@@ -98,6 +107,9 @@ void Game::updateChunks() {
     }
     chunkFutures.clear();
     //std::cout << "update finished" <<std::endl;
+    std::sort(chunks.begin(), chunks.end(),[](std::unique_ptr<Chunk>& a, std::unique_ptr<Chunk>& b){
+        return a->getPos().y < b->getPos().y;
+    });
 }
         
 bool Game::putTile(Vector2 pos, std::string id) {
@@ -136,9 +148,17 @@ bool Game::putTile(Vector2 pos, std::string id) {
 }
 
 void Game::draw() {
-    for (auto &chunk : chunks) {
-        chunk->draw();
+    Variables::toDraw.push_back(&player);
+    for (auto entity : entities) {
+        Variables::toDraw.push_back(entity);
     }
+    for (auto &chunk : chunks) {
+        chunk->drawFloors();
+    }
+    for (auto &chunk : chunks) {
+        chunk->drawTiles();
+    }
+    Variables::toDraw.clear();
 }
 
 Chunk *Game::getChunkptrFromPos(Vector2 pos) {
@@ -196,5 +216,84 @@ std::optional<Item> Game::breakTile(Vector2 pos) {
     return Item(id, 1);
 }
 
-Game::~Game() = default;
+std::vector<Entity*> &Game::getEntities() {
+    return entities;
+}
+
+std::vector<Entity *> Game::getEntityFromPos(Vector2 pos, float radius) {
+    std::vector<Entity *> near{};
+    for (auto &entity : entities) {
+        if (Vector2DistanceSqr(entity->getPos(), pos) < radius*radius) {
+            near.push_back(entity);
+        }
+    }
+    return near;
+}
+
+void Game::update(double delta) {
+    for (auto *entity : entities) {
+        if (auto mob = dynamic_cast<NPC*>(entity)) {
+            mob->calculateRoute();
+        }
+        if (auto item = dynamic_cast<ItemEntity*>(entity)) {
+            item->accelerateTowards({}, delta, 10);
+        }
+        entity->moveAndCollide(delta);
+    }
+    player.moveAndCollide(delta);
+    player.cooldown -= (float) delta;
+    player.cooldown = std::max(player.cooldown, 0.f);
+    auto near = getEntityFromPos(player.getPos(), 2.f);
+    std::vector<size_t> toDelete;
+    for (auto &entity : near) {
+        if (auto item = dynamic_cast<ItemEntity*>(entity)){
+            if (!item->getCollider()->isColliding(player.collider)){
+                player.suckEntity(entity);
+                continue;
+            };
+
+            player.addItem(Item(item->item.getType()->id, item->item.count));
+            auto found = std::find_if(entities.begin(), entities.end(), [entity](Entity* ent) {
+                return ent == entity;
+            });
+            if (found != entities.end()) {
+                toDelete.push_back(found-entities.begin());
+                *found = nullptr;
+            }
+            delete item;
+        }
+    }
+
+    auto it = entities.begin();
+    while (it != entities.end()) {
+        if (*it == nullptr) {
+            it = entities.erase(it);
+        } else ++it;
+    }
+}
+
+void Game::addItemEntity(Item item, Vector2 pos) {
+    ItemEntity *entity = new ItemEntity(item, pos);
+    entity->setVel({
+        ((float)random_value(rng)-0.5f) * 5,
+        ((float)random_value(rng)-0.5f) * 5
+    });
+    entities.push_back(entity);
+}
+
+void Game::addNPC(NPC npc) {
+    NPC *entity = new NPC(npc);
+    entities.push_back(entity);
+}
+
+Game::~Game(){
+    for (auto entity: entities) {
+        if (auto mob = dynamic_cast<NPC*>(entity)){
+            delete mob;
+        }
+        else if (auto item = dynamic_cast<ItemEntity*>(entity)){
+            delete item;
+        }
+    }
+};
 

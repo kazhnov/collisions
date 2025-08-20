@@ -5,6 +5,7 @@
 #include <raylib.h>
 #include <string>
 #include <json.hpp>
+#include "Entity.hpp"
 
 #include "PerlinNoise.hpp"
 
@@ -75,6 +76,8 @@ void Chunk::generate() {
                     (float)posY*CHUNKSIZE+y
             };
             floor->setPos(pos.x, pos.y);
+            Tile* tile = getRelativeTileptr(x,y);
+            tile->setPos(pos.x, pos.y);
             double noise = perlinNoise.octave2D_01(pos.x*SCALE, pos.y*SCALE, 4);
             if (noise < FIRST) {
                 floor->setTypeNoLua("water");
@@ -82,11 +85,10 @@ void Chunk::generate() {
                 floor->setTypeNoLua("grass");
             } else {
                 floor->setTypeNoLua("stone");
+                tile->setTypeNoLua("stone");
             }
             double treeNoise = perlinNoise.octave2D_01(pos.x*TREE_SCALE, pos.y*TREE_SCALE, 4);
-            if (treeNoise > 0.7 && floor->getType()->isWalkable) {
-                Tile* tile = getRelativeTileptr(x,y);
-                tile->setPos(x,y);
+            if (treeNoise > 0.7 && floor->getType()->isWalkable && tile->getType()->id == "void") {
                 tile->setTypeNoLua("tree");
             }
         }
@@ -154,13 +156,30 @@ Floor *Chunk::getFloorptr(Vector2 pos) {
     return floors + y*CHUNKSIZE + x;
 }
 
-
-void Chunk::draw() {
+void Chunk::drawFloors() {
     for (auto &floor : floors) {
         floor.draw();
     }
-    for (auto &tile : tiles) {
-        tile.draw();
+}
+
+void Chunk::drawTiles() {
+    //for (int y = CHUNKSIZE - 1; y >= 0; y--) {
+    for (int y = 0; y < CHUNKSIZE; y++) {
+        float globalY = posY*(int)CHUNKSIZE+y;
+        for (auto &entity : Variables::toDraw) {
+            Vector2 pos = entity->getPos();
+            Vector2 dim = entity->getCollider()->getDim();
+            if (
+                    std::floor(pos.y+(dim.y/2.f)) == globalY &&
+                    std::floor((pos.x-(dim.x/2.f))/(int)CHUNKSIZE) == posX &&
+                    std::floor((pos.y+(dim.y/2.f))/(int)CHUNKSIZE) == posY
+            ) entity->draw();
+
+        }
+        for (int x = 0; x < CHUNKSIZE; x++) {
+            auto tile = tiles + y*CHUNKSIZE+x;
+            tile->draw();
+        }
     }
 }
 

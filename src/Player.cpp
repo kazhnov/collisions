@@ -13,7 +13,7 @@
 #include <vector>
 
 Player::Player(Vector2 pos, Vector2 size, Color color): collider(pos, size), color(color) {
-        texture = LoadTexture((Variables::TexturePath+"player.png").c_str());
+    texture = LoadTexture((Variables::TexturePath+"player.png").c_str());
 };
 
 Player::Player() : collider(Vector2Zero(), {1.f, 1.f}), color(WHITE) {}
@@ -118,9 +118,37 @@ bool Player::breakTileWithReach(Vector2 pos, float reach) {
     auto item = Variables::game->breakTile(pos);
 
     if (item.has_value()) {
-        inventory[20] = item;
+        Variables::game->addItemEntity(item.value(), pos);
         return true;
     }
     return false;
+}
+
+void Player::addItem(Item item) {
+    for (auto &slot : inventory) {
+        if (slot.has_value() && slot.value().getType()->id == item.getType()->id) {
+            slot.value().count += item.count;
+            return;
+        }
+        if (!slot.has_value()) {
+            std::cout <<"found" <<std::endl;
+            slot = item;
+            return;
+        }
+    }
+}
+
+void Player::suckEntity(Entity *entity) {
+    auto vec = Vector2Subtract(getPos(), entity->getPos());
+    float length = Vector2Length(vec);
+    vec = Vector2Normalize(vec);
+    vec = Vector2Scale(vec, 1.f/(length*length));
+    entity->setVel(Vector2Add(entity->getVel(), vec));
+}
+
+Player::~Player() = default;
+
+void Player::onEntityCollision(Entity *entity) {
+
 }
 

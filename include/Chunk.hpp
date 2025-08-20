@@ -16,7 +16,8 @@ public:
 
     void initialize();
 
-    void draw();
+    void drawTiles();
+    void drawFloors();
 
     void setPos(Vector2 pos) {
         posX = std::floor(pos.x);
